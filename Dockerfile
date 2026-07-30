@@ -1,4 +1,5 @@
-FROM php:7.4-apache
+FROM php:8.4-apache
 RUN a2enmod expires
-COPY --chown=www-data:www-data ./www /var/www/html
 RUN docker-php-ext-install mysqli
+RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
+COPY --chown=www-data:www-data ./www /var/www/html

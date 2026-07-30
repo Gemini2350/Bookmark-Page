@@ -9,19 +9,19 @@
 if(isset($_POST['id']) && isset($_POST['name']) && isset($_POST['link']) && isset($_POST['favicon']) && isset($_POST['remarks']) && isset($_POST['group'])){
 	include 'db-conn.php';
 	$id = $_POST['id'];
-	$sort = $_POST['sort'];
+	$sort = $_POST['sort'] ?? '1';
 	$name = $_POST['name'];
 	$link = $_POST['link'];
 	$favicon = $_POST['favicon'];
 	$remarks = $_POST['remarks'];
-	$u1 = $_POST['user1'];
-	$u2 = $_POST['user2'];
-	$u3 = $_POST['user3'];
-	$u4 = $_POST['user4'];
-	$u5 = $_POST['user5'];
-	$u6 = $_POST['user6'];
-	$u7 = $_POST['user7'];
-	$u8 = $_POST['user8'];
+	$u1 = $_POST['user1'] ?? '';
+	$u2 = $_POST['user2'] ?? '';
+	$u3 = $_POST['user3'] ?? '';
+	$u4 = $_POST['user4'] ?? '';
+	$u5 = $_POST['user5'] ?? '';
+	$u6 = $_POST['user6'] ?? '';
+	$u7 = $_POST['user7'] ?? '';
+	$u8 = $_POST['user8'] ?? '';
 	$group = $_POST['group'];
 
 	$queryGroup = 'SELECT * From `groups`';

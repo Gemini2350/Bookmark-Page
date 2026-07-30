@@ -74,6 +74,9 @@
                 <li class="nav-item">
                   <a class="nav-link" id="gcGlobals" href="#globalTab" aria-controls="globalTab" role="tab" data-toggle="tab" aria-selected="false">Globals</a>
                 </li>
+                <li class="nav-item">
+                  <a class="nav-link" id="gcImEx" href="#imExTab" aria-controls="imExTab" role="tab" data-toggle="tab" aria-selected="false">Import / Export</a>
+                </li>
               </ul>
               <!-- Tab panes -->
               <div class="tab-content" style="padding-top:  15px;">
@@ -252,6 +255,36 @@
                     <button type="button" class="btn btn-outline-secondary ml-2" class="close" data-dismiss="modal" aria-label="Close">Cancel</button>
                     <button type="button" class="btn btn-outline-success ml-2" id="gcSaveGlobal" onclick="saveGlobals();">Save</button>
                   </div>
+                </div>
+                <div role="tabpanel" class="tab-pane fade" id="imExTab">
+                  <div class="form-group">
+                    <label>Export</label>
+                    <p class="text-secondary mb-2"><small>Download all Groups and Bookmarks (incl. User-Columns) as a JSON file.</small></p>
+                    <a class="btn btn-outline-success" href="php/exportBookmarks.php" id="gcExportBtn">Export all Bookmarks</a>
+                  </div>
+                  <hr/>
+                  <div class="form-group">
+                    <label for="gcImportFile">Import</label>
+                    <p class="text-secondary mb-2"><small>Import Groups and Bookmarks from a previously exported JSON file. Existing Groups are reused, Bookmarks with an already existing Link are skipped.</small></p>
+                    <div class="custom-file mb-2">
+                      <input type="file" class="custom-file-input" id="gcImportFile" accept=".json,application/json">
+                      <label class="custom-file-label" for="gcImportFile" id="gcImportFileLabel">Choose exported JSON file...</label>
+                    </div>
+                    <button type="button" class="btn btn-outline-success" id="gcImportBtn" disabled>Import Bookmarks</button>
+                  </div>
+                  <hr/>
+                  <div class="form-group">
+                    <label class="text-danger">Danger Zone</label>
+                    <p class="text-secondary mb-2"><small>Delete all Bookmarks at once, e.g. before importing a fresh Export. This cannot be undone &ndash; export first!</small></p>
+                    <div class="form-check mb-2">
+                      <input class="form-check-input" type="checkbox" value="" id="gcDeleteAllGroupsCheck">
+                      <label class="form-check-label" for="gcDeleteAllGroupsCheck">
+                        Also delete all Groups
+                      </label>
+                    </div>
+                    <button type="button" class="btn btn-outline-danger" id="gcDeleteAllBtn">Delete ALL Bookmarks</button>
+                  </div>
+                  <div id="gcImExResult"></div>
                 </div>
               </div>
             </div>

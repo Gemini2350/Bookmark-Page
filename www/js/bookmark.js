@@ -863,6 +863,64 @@ function updateDB(){
 
 }
 
+function importBookmarks(){
+	var file = $('#gcImportFile')[0].files[0];
+	if(!file)	return;
+	var formData = new FormData();
+	formData.append('file', file);
+	$('#gcImportBtn').prop('disabled', true);
+	$('#gcImExResult').html('<div class="alert alert-info">Importing...</div>');
+	$.ajax({
+		url: 'php/importBookmarks.php',
+		type: 'POST',
+		data: formData,
+		processData: false,
+		contentType: false,
+		success: function(data){
+			console.log('Import Req-Answer:', data);
+			$('#gcImExResult').html('<div class="alert alert-success">Import done: '+data.imported+' Bookmarks imported, '+data.groupsCreated+' Groups created, '+data.skipped+' skipped (Link already exists).</div>');
+			$('#gcImportFile').val('');
+			$('#gcImportFileLabel').text('Choose exported JSON file...');
+			stopRefresh();
+			loadPage(refreshCallback);
+		},
+		error: function(xhr){
+			var msg = 'Import failed!';
+			if(xhr.responseJSON && xhr.responseJSON.error)	msg += ' '+xhr.responseJSON.error;
+			$('#gcImExResult').html('<div class="alert alert-danger">'+msg+'</div>');
+			$('#gcImportBtn').prop('disabled', false);
+		}
+	});
+}
+
+function deleteAllBookmarks(){
+	var withGroups = $('#gcDeleteAllGroupsCheck').prop('checked');
+	var msg = 'This will delete ALL '+Numbers.totalBMs+' Bookmarks';
+	if(withGroups)	msg += ' and ALL '+Numbers.groups+' Groups';
+	msg += '!\nThis cannot be undone - consider exporting first!\nAre you sure?';
+	if(!confirm(msg))	return;
+	$.post('php/deleteAllBookmarks.php', {
+		confirm: 'yes',
+		groups: withGroups ? 'true' : 'false'
+
+	}, function(data,status){
+		console.log('DeleteAll Req-Answer:', data, ', Status: '+status);
+		if(data.ok){
+			var msg = 'Deleted '+data.deleted+' Bookmarks';
+			if(data.groupsDeleted)	msg += ' and all Groups';
+			$('#gcImExResult').html('<div class="alert alert-success">'+msg+'.</div>');
+			stopRefresh();
+			loadPage(refreshCallback);
+		}else{
+			$('#gcImExResult').html('<div class="alert alert-danger">Delete failed!</div>');
+		}
+	}).fail(function(xhr){
+		var msg = 'Delete failed!';
+		if(xhr.responseJSON && xhr.responseJSON.error)	msg += ' '+xhr.responseJSON.error;
+		$('#gcImExResult').html('<div class="alert alert-danger">'+msg+'</div>');
+	});
+}
+
 function getCookie(cname) {
 	var name = cname + "=";
 	var decodedCookie = decodeURIComponent(document.cookie);
@@ -895,6 +953,19 @@ $(document).ready(function () {
 	}
 	loadPage(function(){$("#searchInput").focus();});
 	$('#configBtn').click(function(){openConfig();});
+	$('#gcImportFile').change(function(){
+		var file = this.files[0];
+		if(file){
+			$('#gcImportFileLabel').text(file.name);
+			$('#gcImportBtn').prop('disabled', false);
+		}else{
+			$('#gcImportFileLabel').text('Choose exported JSON file...');
+			$('#gcImportBtn').prop('disabled', true);
+		}
+		$('#gcImExResult').empty();
+	});
+	$('#gcImportBtn').click(function(){importBookmarks();});
+	$('#gcDeleteAllBtn').click(function(){deleteAllBookmarks();});
 	$("#searchInput").on("keyup", function() {
     	var searchstring = $.trim($(this).val().toLowerCase());
     	$("#searchData tr").filter(function() {

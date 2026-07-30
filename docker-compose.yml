@@ -1,17 +1,20 @@
-version: "2"
 services:
     www:
         build: .
-        ports: 
+        image: bookmark-page:latest
+        ports:
             - "8080:80"
-        links:
-            - db
-        networks:
-            - default
+        environment:
+            DB_HOST: db
+            DB_USER: bookmark
+            DB_PASSWORD: bookpass
+            DB_NAME: bookmark-db
+        depends_on:
+            db:
+                condition: service_healthy
+        restart: unless-stopped
     db:
-        image: mysql
-        ports: 
-            - "3306:3306"
+        image: mysql:8.4
         environment:
             MYSQL_DATABASE: bookmark-db
             MYSQL_USER: bookmark
@@ -20,17 +23,21 @@ services:
         volumes:
             - ./dump:/docker-entrypoint-initdb.d
             - persistent:/var/lib/mysql
-        networks:
-            - default
+        healthcheck:
+            test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-ubookmark", "-pbookpass"]
+            interval: 5s
+            timeout: 5s
+            retries: 20
+        restart: unless-stopped
     phpmyadmin:
-        image: phpmyadmin/phpmyadmin
-        links: 
-            - db:db
+        image: phpmyadmin:latest
         ports:
-            - 8000:80
+            - "8000:80"
         environment:
-            MYSQL_USER: bookmark
-            MYSQL_PASSWORD: bookpass
-            MYSQL_ROOT_PASSWORD: bookpass
+            PMA_HOST: db
+        depends_on:
+            db:
+                condition: service_healthy
+        restart: unless-stopped
 volumes:
     persistent:

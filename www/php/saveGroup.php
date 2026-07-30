@@ -10,8 +10,8 @@ if(isset($_POST['old']) && isset($_POST['new']) && isset($_POST['json'])){
 	include 'db-conn.php';
 	$old = $_POST['old'];
 	$new = $_POST['new'];
-	$sort = $_POST['sort'];
-	$remark = $_POST['remark'];
+	$sort = $_POST['sort'] ?? '0';
+	$remark = $_POST['remark'] ?? '';
 	$json = $_POST['json'];
 	$array = json_decode($json);
 

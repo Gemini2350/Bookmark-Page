@@ -9,7 +9,7 @@
 include 'db-conn.php';
 if(isset($_POST['sort'])){
 	$sort = $_POST['sort'];
-	if($_POST['asc'] != 'false'){
+	if(($_POST['asc'] ?? 'true') != 'false'){
 		$dir = 'ASC';
 	}else{
 		$dir = 'DESC';
@@ -17,7 +17,11 @@ if(isset($_POST['sort'])){
 }else{
 	$sort = 'sort';
 	$dir = 'ASC';
-} 
+}
+$allowedSort = array('id', 'sort', 'name', 'link', 'favicon', 'remarks', 'user1', 'user2', 'user3', 'user4', 'user5', 'user6', 'user7', 'user8');
+if(!in_array($sort, $allowedSort)){
+	$sort = 'sort';
+}
 
 $queryGroup = 'SELECT * From `groups` ORDER BY `groups`.`sort` ASC';
 
