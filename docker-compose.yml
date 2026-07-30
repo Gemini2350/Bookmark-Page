@@ -1,7 +1,6 @@
 services:
     www:
-        build: .
-        image: bookmark-page:latest
+        image: gemini2350/bookmark-page:latest
         ports:
             - "8080:80"
         environment:

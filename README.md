@@ -3,7 +3,10 @@
 clone the Repo and just run `docker compose up -d` and goto localhost:8080. enjoy...
 
 This fork is updated to current dependencies (PHP 8.4 Apache image, MySQL 8.4) and adds an
-Import / Export feature for all Bookmarks.
+Import / Export feature for all Bookmarks. The image is built automatically (linux/amd64 +
+linux/arm64) and published at https://hub.docker.com/r/gemini2350/bookmark-page —
+`docker-compose.yml` pulls it, no local build needed. To build yourself, use
+`docker compose -f docker-compose.dev.yml up -d` instead.
 
 ## Features of this fork
 
