@@ -1,42 +1,10 @@
 services:
-    www:
+    bookmark-page:
         image: gemini2350/bookmark-page:latest
         ports:
             - "8080:80"
-        environment:
-            DB_HOST: db
-            DB_USER: bookmark
-            DB_PASSWORD: bookpass
-            DB_NAME: bookmark-db
-        depends_on:
-            db:
-                condition: service_healthy
-        restart: unless-stopped
-    db:
-        image: mysql:8.4
-        environment:
-            MYSQL_DATABASE: bookmark-db
-            MYSQL_USER: bookmark
-            MYSQL_PASSWORD: bookpass
-            MYSQL_ROOT_PASSWORD: bookpass
         volumes:
-            - ./dump:/docker-entrypoint-initdb.d
-            - persistent:/var/lib/mysql
-        healthcheck:
-            test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-ubookmark", "-pbookpass"]
-            interval: 5s
-            timeout: 5s
-            retries: 20
-        restart: unless-stopped
-    phpmyadmin:
-        image: phpmyadmin:latest
-        ports:
-            - "8000:80"
-        environment:
-            PMA_HOST: db
-        depends_on:
-            db:
-                condition: service_healthy
+            - db-data:/var/lib/mysql
         restart: unless-stopped
 volumes:
-    persistent:
+    db-data:
