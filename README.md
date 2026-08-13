@@ -40,6 +40,25 @@ Alternatively clone the Repo and use `docker compose up -d`.
 
 ![Import / Export](docs/screenshot-import-export.png)
 
+## Migrating from the original Bookmark-Page
+
+The original version has no export feature, but its API can be read. Use
+[scripts/migrate-from-original.py](scripts/migrate-from-original.py) (Python 3, no
+dependencies) to copy all Groups and Bookmarks over:
+
+```
+python3 scripts/migrate-from-original.py http://old-host:8080 http://new-host:8080
+```
+
+or write an `export.json` first and use the Import / Export tab in the new instance:
+
+```
+python3 scripts/migrate-from-original.py http://old-host:8080 > export.json
+```
+
+Bookmarks whose Link already exists in the new instance are skipped, so the script is
+safe to run more than once.
+
 ## Development
 
 build locally with `docker build -t bookmark-page .` and run it the same way as above.
