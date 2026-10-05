@@ -415,6 +415,21 @@ function openConfigFn(){
 	    $('#gcSortBMList').sortable();
 	    feather.replace();
     });
+	//Move-Tab
+	$('#gcMoveFromSelect').empty().append(bMgroupDD);
+	$('#gcMoveTargetSelect').empty().append(bMgroupDD);
+	if(Object.keys(Bookmarks).length > 1){
+		$('#gcMoveTargetSelect').prop('selectedIndex', 1);
+	}
+	renderMoveList($('#gcMoveFromSelect').val());
+	$('#gcMoveResult').empty();
+	$('#gcMoveFromSelect').off().on('change', function(e){
+		renderMoveList(this.value);
+		$('#gcMoveResult').empty();
+	});
+	$('#gcMoveSelectAll').off().click(function(e){ e.preventDefault(); $('.gc-move-check').prop('checked', true); });
+	$('#gcMoveSelectNone').off().click(function(e){ e.preventDefault(); $('.gc-move-check').prop('checked', false); });
+	$('#gcMoveBtn').off().click(function(){ moveBookmarks(); });
 	//Group-Tab
 	$('#gcGroupSelect').empty().append(groupDD);
 	$('#gcGroupSort').sortable('destroy').empty().append(groupSortList);
@@ -875,6 +890,54 @@ function updateDB(){
 			}
 		});
 
+}
+
+function renderMoveList(group){
+	var list = '';
+	$.each(Bookmarks[group] || [], function(i, bookmark){
+		list += '<li class="list-group-item list-group-item-action"><div class="form-check"><input class="form-check-input gc-move-check" type="checkbox" value="'+bookmark.id+'" id="gcMoveBM-'+bookmark.id+'"><label class="form-check-label d-block" for="gcMoveBM-'+bookmark.id+'"><img style="height: 18px; max-width: 35px;" class="mr-2" src="'+resolveVar(bookmark.favicon, GroupData[group].variable)+'" onerror="this.onerror=null; this.src=\'img/errorfav.svg\'"></img>'+bookmark.name+'</label></div></li>';
+	});
+	if(!list){
+		list = '<li class="list-group-item text-secondary">No Bookmarks in this Group...</li>';
+	}
+	$('#gcMoveList').empty().append(list);
+}
+
+function moveBookmarks(){
+	var from = $('#gcMoveFromSelect').val();
+	var target = $('#gcMoveTargetSelect').val();
+	var ids = $('.gc-move-check:checked').map(function(){ return this.value; }).get();
+	if(ids.length === 0){
+		$('#gcMoveResult').html('<div class="alert alert-info">No Bookmarks selected!</div>');
+		return;
+	}
+	if(from === target){
+		$('#gcMoveResult').html('<div class="alert alert-info">From and To Group are the same!</div>');
+		return;
+	}
+	$.post('php/moveBookmarks.php', {
+		target: target,
+		json: JSON.stringify(ids)
+
+	}, function(data,status){
+		console.log('MoveBMs Req-Answer:', data, ', Status: '+status);
+		if(data.ok){
+			stopRefresh();
+			if($('#gcCloseCheckMove').prop('checked')){
+				loadPage(refreshCallback);
+				$('#globalConfigModal').modal('hide');
+			}else{
+				loadPage(function(){
+					openConfig();
+					$('#gcMoveResult').html('<div class="alert alert-success">Moved '+data.moved+' Bookmarks to '+target+'.</div>');
+				});
+			}
+		}
+	}).fail(function(xhr){
+		var msg = 'Move failed!';
+		if(xhr.responseJSON && xhr.responseJSON.error)	msg += ' '+xhr.responseJSON.error;
+		$('#gcMoveResult').html('<div class="alert alert-danger">'+msg+'</div>');
+	});
 }
 
 function importBookmarks(){

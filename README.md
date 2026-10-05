@@ -35,6 +35,8 @@ Alternatively clone the Repo and use `docker compose up -d`.
   - Import a previously exported JSON file: existing Groups are reused, Bookmarks whose
     Link already exists are skipped
   - Danger Zone: delete all Bookmarks (optionally incl. all Groups) at once
+- **Move Bookmarks**: new Move tab in the Global-Configuration modal — tick several
+  Bookmarks of one Group and move them to another Group in one go
 - **Group Variables**: each Group can define a Variable (Globals-Configuration → Groups tab).
   `{var}` in a Bookmark's Link or Favicon-URL is replaced by the Variable of the Group the
   Bookmark is in — e.g. Link `http://device.{var}/admin/` with Variable

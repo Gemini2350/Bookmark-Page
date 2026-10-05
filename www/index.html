@@ -69,6 +69,9 @@
                   <a class="nav-link" id="gcBMSort" href="#bmSortTab" aria-controls="bmSortTab" role="tab" data-toggle="tab" aria-selected="false">Sort Bookmarks</a>
                 </li>
                 <li class="nav-item">
+                  <a class="nav-link" id="gcMove" href="#moveTab" aria-controls="moveTab" role="tab" data-toggle="tab" aria-selected="false">Move</a>
+                </li>
+                <li class="nav-item">
                   <a class="nav-link" id="gcGroups" href="#groupTab" aria-controls="groupTab" role="tab" data-toggle="tab" aria-selected="false">Groups</a>
                 </li>
                 <li class="nav-item">
@@ -172,6 +175,40 @@
                   </div>
                 </div>
 
+                <div role="tabpanel" class="tab-pane fade" id="moveTab">
+                  <form id="gcMoveForm" novalidate>
+                    <div class="form-group">
+                      <label for="gcMoveFromSelect">From Group</label>
+                      <select class="form-control" id="gcMoveFromSelect"></select>
+                    </div>
+                    <div class="form-group">
+                      <label>Select Bookmarks to move</label>
+                      <ul class="list-group" id="gcMoveList"></ul>
+                      <small class="text-secondary"><a href="#" id="gcMoveSelectAll">select all</a> / <a href="#" id="gcMoveSelectNone">none</a></small>
+                    </div>
+                    <div class="form-group">
+                      <label for="gcMoveTargetSelect">To Group</label>
+                      <select class="form-control" id="gcMoveTargetSelect"></select>
+                    </div>
+                  </form>
+                  <div id="gcMoveResult"></div>
+                  <div class="row align-items-center">
+                    <div class="col-5">
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" checked="checked" value="" id="gcCloseCheckMove">
+                        <label class="form-check-label" for="gcCloseCheckMove">
+                          Move and Close
+                        </label>
+                      </div>
+                    </div>
+                    <div class="col-7">
+                      <div class="float-right">
+                        <button type="button" class="btn btn-outline-secondary ml-2" class="close" data-dismiss="modal" aria-label="Close">Cancel</button>
+                        <button type="button" class="btn btn-outline-success ml-2" id="gcMoveBtn">Move Bookmarks</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 <div role="tabpanel" class="tab-pane fade" id="groupTab">
                   <form id="gcGroupForm" novalidate>
                     <div class="form-group">
