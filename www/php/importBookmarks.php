@@ -44,15 +44,17 @@ if ($result = mysqli_query($con, 'SELECT `id`, `name`, `sort` FROM `groups`')) {
 	}
 	mysqli_free_result($result);
 }
+// existing links per group (the same link may exist in different groups,
+// e.g. templates with {var} placeholders resolved per group)
 $existingLinks = array();
-if ($result = mysqli_query($con, 'SELECT `link` FROM `bookmarks`')) {
+if ($result = mysqli_query($con, 'SELECT `L`.`group-id` AS gid, `B`.`link` FROM `bookmarks` `B` INNER JOIN `link-groups-bookmarks` `L` ON `B`.`id` = `L`.`bookmark-id`')) {
 	while ($row = mysqli_fetch_assoc($result)) {
-		$existingLinks[$row['link']] = true;
+		$existingLinks[$row['gid'].'|'.$row['link']] = true;
 	}
 	mysqli_free_result($result);
 }
 
-$stmtGroup = $con->prepare('INSERT INTO `groups` (`sort`, `name`, `remarks`) VALUES (?, ?, ?)');
+$stmtGroup = $con->prepare('INSERT INTO `groups` (`sort`, `name`, `remarks`, `variable`) VALUES (?, ?, ?, ?)');
 $stmtBM = $con->prepare('INSERT INTO `bookmarks` (`sort`, `link`, `favicon`, `name`, `remarks`, `user1`, `user2`, `user3`, `user4`, `user5`, `user6`, `user7`, `user8`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
 $stmtLink = $con->prepare('INSERT INTO `link-groups-bookmarks` (`group-id`, `bookmark-id`) VALUES (?, ?)');
 $stmtMaxSort = $con->prepare('SELECT COALESCE(MAX(`B`.`sort`), 0) AS maxsort FROM `bookmarks` `B` INNER JOIN `link-groups-bookmarks` `L` ON `B`.`id` = `L`.`bookmark-id` WHERE `L`.`group-id` = ?');
@@ -71,7 +73,8 @@ foreach ($import['groups'] as $group) {
 	} else {
 		$groupMaxSort++;
 		$gRemarks = strval($group['remarks'] ?? '');
-		$stmtGroup->bind_param('iss', $groupMaxSort, $gName, $gRemarks);
+		$gVariable = strval($group['variable'] ?? '');
+		$stmtGroup->bind_param('isss', $groupMaxSort, $gName, $gRemarks, $gVariable);
 		if (!$stmtGroup->execute()) {
 			fail('DB error creating group "'.$gName.'": '.$con->error, 500);
 		}
@@ -91,7 +94,7 @@ foreach ($import['groups'] as $group) {
 			$skipped++;
 			continue;
 		}
-		if (isset($existingLinks[$link])) {
+		if (isset($existingLinks[$gid.'|'.$link])) {
 			$skipped++;
 			continue;
 		}
@@ -111,7 +114,7 @@ foreach ($import['groups'] as $group) {
 		if (!$stmtLink->execute()) {
 			fail('DB error linking bookmark "'.$bName.'": '.$con->error, 500);
 		}
-		$existingLinks[$link] = true;
+		$existingLinks[$gid.'|'.$link] = true;
 		$imported++;
 	}
 }

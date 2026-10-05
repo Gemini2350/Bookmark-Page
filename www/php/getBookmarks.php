@@ -40,6 +40,7 @@ while($groupFetch = mysqli_fetch_assoc($resultG)) {
 	$group['sort'] = $groupFetch['sort'];
 	$group['name'] = $groupFetch['name'];
 	$group['remarks'] = $groupFetch['remarks'];
+	$group['variable'] = $groupFetch['variable'] ?? '';
 	$groupdata[$groupFetch['name']] = $group;
 	
 	if (!$resultBM = mysqli_query($con, $queryMarks)) {

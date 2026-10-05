@@ -39,16 +39,20 @@ if(isset($_POST['version'])){
     $version = explode('.', $_POST['version']);
     $dbVersion = explode('.', $_POST['dbVersion']);
     if($version[0] == '1' && $dbVersion[0] == '1'){
-        if($dbVersion[1] == '2'){
+        if($dbVersion[1] == '3'){
             $query = 'UPDATE `global` SET `value` = "'.$_POST['version'].'" WHERE `global`.`key` = "version"';
             if (!$result = mysqli_query($con, $query)) {
                 exit(mysqli_error($con));
             }
+        }elseif($dbVersion[1] == '2'){
+            updateWithFile('update_v1.3.sql');
         }elseif($dbVersion[1] == '1'){
             updateWithFile('update_v1.2.sql');
+            updateWithFile('update_v1.3.sql');
         }else {
             updateWithFile('update_v1.1.sql');
             updateWithFile('update_v1.2.sql');
+            updateWithFile('update_v1.3.sql');
         }
     }else {
         updateWithFile('myDb.sql');

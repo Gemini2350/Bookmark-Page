@@ -45,6 +45,12 @@ SQL
 if ! mariadb "$DB_NAME" -e "SELECT 1 FROM \`global\` LIMIT 1;" >/dev/null 2>&1; then
     echo "[standalone] Importing initial schema..."
     mariadb "$DB_NAME" < /docker-init/myDb.sql
+else
+    # idempotent migrations for existing data volumes
+    mariadb "$DB_NAME" <<'MIGRATE'
+ALTER TABLE `groups` ADD COLUMN IF NOT EXISTS `variable` varchar(255) NOT NULL DEFAULT '';
+UPDATE `global` SET `value` = '1.3.0' WHERE `key` = 'version' AND `value` LIKE '1.2%';
+MIGRATE
 fi
 
 shutdown_all() {

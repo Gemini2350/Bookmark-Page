@@ -17,7 +17,13 @@ var GroupHide = {};
 var AltPressed = false;
 var ShiftPressed = false;
 var Mouseovered = false;
-var BMP_Version = '1.2.3';
+var BMP_Version = '1.3.0';
+
+// replaces {var} in Links/Favicon-URLs with the Group's Variable
+function resolveVar(str, groupVar){
+	if(!str || !groupVar)	return str;
+	return str.split('{var}').join(groupVar);
+}
 
 // Functions
 function loadPage(callback){
@@ -78,8 +84,11 @@ function loadPage(callback){
 				Numbers.totalBMs = 0;
 				for (gName in Bookmarks){
 					html += '<tr class="GroupTitle" onclick="toggleGroup(\'g-'+gcid+'\');"><td id="gI-g-'+gcid+'" class="GroupIcon"><i data-feather="chevron-up" width="20" height="20"></i></td><th>'+gName+'</th><td colspan="'+colspanNr+'" scope="row">'+GroupData[gName].remarks+'</td></tr>';
+					var groupVar = GroupData[gName].variable;
 					$.each(Bookmarks[gName], function(i, bookmark){
-						html += '<tr id="bm-'+bookmark.id+'" class="g-'+gcid+'" onclick="openInNewTab(\''+bookmark.link+'\');" data-toggle="tooltip" title="URL: '+bookmark.link+'"><td><img class="bm-img" src="'+bookmark.favicon+'" onerror="this.onerror=null; this.src=\'img/errorfav.svg\'"></img></td><td>'+bookmark.name+'</td><td>'+bookmark.remarks+'</td>';
+						var bmLink = resolveVar(bookmark.link, groupVar);
+						var bmFav = resolveVar(bookmark.favicon, groupVar);
+						html += '<tr id="bm-'+bookmark.id+'" class="g-'+gcid+'" onclick="openInNewTab(\''+bmLink+'\');" data-toggle="tooltip" title="URL: '+bmLink+'"><td><img class="bm-img" src="'+bmFav+'" onerror="this.onerror=null; this.src=\'img/errorfav.svg\'"></img></td><td>'+bookmark.name+'</td><td>'+bookmark.remarks+'</td>';
 						for (var j = 1; j <= Global.userCol; j++) {
 							html += '<td'
 							if(Global['hideU'+j] !== '0')	html += ' style="display: none;"'
@@ -134,7 +143,7 @@ function loadPage(callback){
 				}
 				for (gName in Bookmarks){
 					$.each(Bookmarks[gName], function(i, bm){
-						$('#bm-'+bm.id+' .bm-img').attr({'src':bm.favicon, 'onerror':'this.onerror=null; this.src="img/errorfav.svg"'});
+						$('#bm-'+bm.id+' .bm-img').attr({'src':resolveVar(bm.favicon, GroupData[gName].variable), 'onerror':'this.onerror=null; this.src="img/errorfav.svg"'});
 					});
 				}
 				feather.replace();
@@ -392,7 +401,7 @@ function openConfigFn(){
     //Sort Bookmark Tab
     $('#gcSortBMSelect').empty().append(bMsortGroupDD);
     $.each(Bookmarks[$('#gcSortBMSelect').val()], function(i, bookmark){
-		bMSortList += '<li class="list-group-item list-group-item-action sort-li" data-id="'+bookmark.id+'"><img style="height: 18px; max-width: 35px;" class="mr-2" src="'+bookmark.favicon+'" onerror="this.onerror=null; this.src=\'img/errorfav.svg\'"></img>'+bookmark.name+'<i data-feather="move" class="mt-1 float-right" height="17"></i></li>';
+		bMSortList += '<li class="list-group-item list-group-item-action sort-li" data-id="'+bookmark.id+'"><img style="height: 18px; max-width: 35px;" class="mr-2" src="'+resolveVar(bookmark.favicon, GroupData[$('#gcSortBMSelect').val()].variable)+'" onerror="this.onerror=null; this.src=\'img/errorfav.svg\'"></img>'+bookmark.name+'<i data-feather="move" class="mt-1 float-right" height="17"></i></li>';
 	});
     $('#gcSortBMList').sortable('destroy').empty().append(bMSortList);
     $('#gcSortBMList').sortable();
@@ -400,7 +409,7 @@ function openConfigFn(){
     $('#gcSortBMSelect').off().on('change', function(e){
     	var bMSortList = '';
 	    $.each(Bookmarks[$('#gcSortBMSelect').val()], function(i, bookmark){
-			bMSortList += '<li class="list-group-item list-group-item-action sort-li" data-id="'+bookmark.id+'"><img style="height: 18px; max-width: 35px;" class="mr-2" src="'+bookmark.favicon+'" onerror="this.onerror=null; this.src=\'img/errorfav.svg\'"></img>'+bookmark.name+'<i data-feather="move" class="mt-1 float-right" height="17"></i></li>';
+			bMSortList += '<li class="list-group-item list-group-item-action sort-li" data-id="'+bookmark.id+'"><img style="height: 18px; max-width: 35px;" class="mr-2" src="'+resolveVar(bookmark.favicon, GroupData[$('#gcSortBMSelect').val()].variable)+'" onerror="this.onerror=null; this.src=\'img/errorfav.svg\'"></img>'+bookmark.name+'<i data-feather="move" class="mt-1 float-right" height="17"></i></li>';
 		});
 	    $('#gcSortBMList').sortable('destroy').empty().append(bMSortList);
 	    $('#gcSortBMList').sortable();
@@ -412,14 +421,17 @@ function openConfigFn(){
 	$('#gcGroupName').val('');
 	$('#gcGroupRemark').val('');
 	$('#gcGroupSort').sortable();
+	$('#gcGroupVariable').val('');
 	$('#gcGroupSelect').off().on('change', function(e){
   		if(this.value !== '-1'){
 			$('#gcGroupName').val(this.value);
 			$('#gcGroupRemark').val(GroupData[this.value].remarks);
+			$('#gcGroupVariable').val(GroupData[this.value].variable);
     		$('#gcDeleteGroup').off().click(this.value, deleteGroup).prop('disabled', false);
   		} else {
 			$('#gcGroupName').val('');
 			$('#gcGroupRemark').val('');
+			$('#gcGroupVariable').val('');
     		$('#gcDeleteGroup').off().prop('disabled', true);
     	}
 	});
@@ -483,15 +495,15 @@ function saveBM(event){
 						$('#gcBMName').off('change');
 					});
 				}
-			}
-			if(link == bookmark.link && link !== old.link){
-				$('#gcBMLinkIVF').html('Link already exists in Bookmark '+bookmark.name+' in Group '+gName+'!<br/> The same Link is not allowed!');
-				$('#gcBMLink')[0].setCustomValidity('Link already exists!');
-				$('#gcBMLink').change(function() {
-					$('#gcBMLink')[0].setCustomValidity('');
-					$('#gcBMLinkIVF').empty();
-					$('#gcBMLink').off('change');
-				});
+				if(link == bookmark.link && link !== old.link){
+					$('#gcBMLinkIVF').html('Link already exists in Bookmark '+bookmark.name+' in the same Group '+gName+'!<br/> The same Link is not allowed within one Group. In an other Group it would be - e.g. with a {var} placeholder...');
+					$('#gcBMLink')[0].setCustomValidity('Link already exists!');
+					$('#gcBMLink').change(function() {
+						$('#gcBMLink')[0].setCustomValidity('');
+						$('#gcBMLinkIVF').empty();
+						$('#gcBMLink').off('change');
+					});
+				}
 			}
 		});
 	}
@@ -584,6 +596,7 @@ function saveGroup(){
 	var oldGroup = $('#gcGroupSelect').val();
 	var newGroup = $('#gcGroupName').val();
 	var newGroupRemark = $('#gcGroupRemark').val();
+	var newGroupVariable = $('#gcGroupVariable').val();
 	var sort = Numbers.groups + 1;
 	var order = $('#gcGroupSort').sortable('toArray');
 	var i = 0;
@@ -604,7 +617,7 @@ function saveGroup(){
 	if(newGroup === '-1'){
 		$('#gcGroupNameIVF').text('Group-Name can\'t be "-1"!');
 		send = false;
-	}else if(newGroup === oldGroup && newGroupRemark === GroupData[oldGroup].remarks){
+	}else if(newGroup === oldGroup && newGroupRemark === GroupData[oldGroup].remarks && newGroupVariable === GroupData[oldGroup].variable){
 		$('#gcGroupNameIVF').text('Group-Name not changed');
 		send = false;
 	}else if(!newGroup.trim()){
@@ -619,9 +632,10 @@ function saveGroup(){
 			old: oldID,
 			new: newGroup,
 			remark: newGroupRemark,
+			variable: newGroupVariable,
 			sort: sort,
 			json: JSON.stringify(orderChanged)
-	
+
 		}, function(data,status){
 			console.log("SaveGroup Req-Answer Data: "+data+", Status: "+status);
 			if(data == 'OK'){

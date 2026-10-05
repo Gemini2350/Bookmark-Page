@@ -47,7 +47,7 @@ def to_export(old):
             'sort': int(g.get('sort') or len(groups) + 1),
             'bookmarks': bookmarks,
         })
-    return {'type': 'bookmark-page-export', 'version': '1.2.3', 'groups': groups}
+    return {'type': 'bookmark-page-export', 'version': '1.3.0', 'groups': groups}
 
 
 def post_new(base, export):

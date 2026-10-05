@@ -96,7 +96,7 @@ INSERT INTO `global` (`key`, `value`) VALUES
 ('nameU8', 'Label 8'),
 ('refresh', '30'),
 ('userCol', '0'),
-('version', '1.2.3');
+('version', '1.3.0');
 
 -- --------------------------------------------------------
 
@@ -110,6 +110,7 @@ CREATE TABLE IF NOT EXISTS `groups` (
   `sort` int NOT NULL,
   `name` text NOT NULL,
   `remarks` text NOT NULL,
+  `variable` varchar(255) NOT NULL DEFAULT '',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci ROW_FORMAT=DYNAMIC;
 

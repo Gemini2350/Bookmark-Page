@@ -93,7 +93,8 @@
                     </div>
                     <div class="form-group">
                       <label for="gcBMLink">Link</label>
-                      <input type="url" id="gcBMLink" placeholder="http://www.whatever.xyz" class="form-control" required/>
+                      <input type="text" id="gcBMLink" placeholder="http://www.whatever.xyz" class="form-control" required/>
+                      <small class="text-secondary">You can use <code>{var}</code> in the Link and Favicon-URL &ndash; it is replaced by the Variable of the Bookmark's Group.</small>
                       <div class="invalid-feedback" id="gcBMLinkIVF"></div>
                     </div>
                     <div class="form-group">
@@ -185,6 +186,11 @@
                     <div class="form-group">
                       <label for="gcGroupRemark">Remarks</label>
                       <input type="text" id="gcGroupRemark" placeholder="some Remarks..." class="form-control"/>
+                    </div>
+                    <div class="form-group">
+                      <label for="gcGroupVariable">Variable</label>
+                      <input type="text" id="gcGroupVariable" placeholder="e.g. gruppe1.example.com" class="form-control"/>
+                      <small class="text-secondary">Replaces <code>{var}</code> in the Links and Favicon-URLs of this Group's Bookmarks, e.g. <code>http://device.{var}/admin/</code></small>
                     </div>
                     <div class="form-group">
                       <label for="gcGroupSort">Sort Groups</label>

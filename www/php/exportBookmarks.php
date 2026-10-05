@@ -34,6 +34,7 @@ while ($groupFetch = mysqli_fetch_assoc($resultG)) {
 	$group = array();
 	$group['name'] = $groupFetch['name'];
 	$group['remarks'] = $groupFetch['remarks'];
+	$group['variable'] = $groupFetch['variable'] ?? '';
 	$group['sort'] = intval($groupFetch['sort']);
 	$group['bookmarks'] = array();
 	$stmt->bind_param('i', $groupFetch['id']);
