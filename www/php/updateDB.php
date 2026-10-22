@@ -36,6 +36,10 @@ function updateWithFile($filename) {
 }
 
 if(isset($_POST['version'])){
+    if (!preg_match('/^\d+\.\d+\.\d+$/', $_POST['version'])) {
+        http_response_code(400);
+        exit('Invalid version');
+    }
     $version = explode('.', $_POST['version']);
     $dbVersion = explode('.', $_POST['dbVersion']);
     if($version[0] == '1' && $dbVersion[0] == '1'){

@@ -8,20 +8,25 @@
 
 $favcolors = '../img/favcolors';
 $icons = '../img/icons';
+$scanned_favcolors = array_values(array_diff(scandir($favcolors), array('..', '.')));
 if(isset($_POST['color'])){
-    $file = $_POST['color'];
+    // only files that actually exist in the favcolors directory may be copied
+    $file = basename($_POST['color']);
+    if (!in_array($file, $scanned_favcolors, true)) {
+        http_response_code(400);
+        echo("Invalid favicon");
+        exit;
+    }
     $src = $favcolors . '/' . $file;
     copy($src, '../favicon.ico');
 
     http_response_code(200);
 	echo("OK");
 }else{
-	$scanned_favcolors = array_diff(scandir($favcolors), array('..', '.'));
-	$scanned_icons = array_diff(scandir($icons), array('..', '.'));
+	$scanned_icons = array_values(array_diff(scandir($icons), array('..', '.')));
 	$out = array('favcolors' => $scanned_favcolors, 'icons' => $scanned_icons);
     header('Content-Type: application/json');
     echo json_encode($out);
 }
-
 
 ?>

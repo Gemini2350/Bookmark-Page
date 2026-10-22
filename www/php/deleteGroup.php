@@ -10,22 +10,25 @@ if(isset($_POST['groupname'])){
 	include 'db-conn.php';
 	$name = $_POST['groupname'];
 
-	$query = 'SELECT COUNT(*) FROM `link-groups-bookmarks` `L` INNER JOIN `groups` `G` ON `L`.`group-id` = `G`.`id` WHERE `G`.name = "'.$name.'"';
-	if (!$result = mysqli_query($con, $query)) {
-        exit(mysqli_error($con));
+	$stmt = $con->prepare('SELECT COUNT(*) AS cnt FROM `link-groups-bookmarks` `L` INNER JOIN `groups` `G` ON `L`.`group-id` = `G`.`id` WHERE `G`.name = ?');
+	$stmt->bind_param('s', $name);
+	if (!$stmt->execute()) {
+		exit(mysqli_error($con));
 	}
-	$fetch = mysqli_fetch_assoc($result);
+	$fetch = $stmt->get_result()->fetch_assoc();
+	$stmt->close();
 
-	if ($fetch['COUNT(*)'] == 0){
-		$delete = 'DELETE FROM `groups` WHERE `groups`.`name` = "'.$name.'"';
+	if ($fetch['cnt'] == 0){
+		$stmt = $con->prepare('DELETE FROM `groups` WHERE `groups`.`name` = ?');
 	}else{
-		$delete = 'DELETE `B`, `G`, `L` FROM `bookmarks` `B` INNER JOIN `link-groups-bookmarks` `L` ON `B`.`id` = `L`.`bookmark-id` INNER JOIN `groups` `G` ON `L`.`group-id` = `G`.`id` WHERE `G`.name = "'.$name.'"';
+		$stmt = $con->prepare('DELETE `B`, `G`, `L` FROM `bookmarks` `B` INNER JOIN `link-groups-bookmarks` `L` ON `B`.`id` = `L`.`bookmark-id` INNER JOIN `groups` `G` ON `L`.`group-id` = `G`.`id` WHERE `G`.name = ?');
 	}
+	$stmt->bind_param('s', $name);
+	if (!$stmt->execute()) {
+		exit(mysqli_error($con));
+	}
+	$stmt->close();
 
-    if (!$result = mysqli_query($con, $delete)) {
-        exit(mysqli_error($con));
-    }
-	
 	http_response_code(200);
 	echo("OK");
 

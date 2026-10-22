@@ -33,7 +33,7 @@ $bookmarks = array();
 $groupdata = array();
 
 while($groupFetch = mysqli_fetch_assoc($resultG)) {
-	$queryMarks = 'SELECT `B`.*, `G`.`id` AS Gid, `G`.name AS Gname FROM `bookmarks` `B` INNER JOIN `link-groups-bookmarks` `L` ON `B`.`id` = `L`.`bookmark-id` INNER JOIN `groups` `G` ON `L`.`group-id` = `G`.`id` WHERE `L`.`group-id` = '.$groupFetch['id'].' ORDER BY `B`.`'.$sort.'` '.$dir;
+	$queryMarks = 'SELECT `B`.*, `G`.`id` AS Gid, `G`.name AS Gname FROM `bookmarks` `B` INNER JOIN `link-groups-bookmarks` `L` ON `B`.`id` = `L`.`bookmark-id` INNER JOIN `groups` `G` ON `L`.`group-id` = `G`.`id` WHERE `L`.`group-id` = '.intval($groupFetch['id']).' ORDER BY `B`.`'.$sort.'` '.$dir;
 	$bmgroup = array();
 	$group = array();
 	$group['id'] = $groupFetch['id'];

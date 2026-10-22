@@ -9,56 +9,58 @@
 if(isset($_POST['id']) && isset($_POST['name']) && isset($_POST['link']) && isset($_POST['favicon']) && isset($_POST['remarks']) && isset($_POST['group'])){
 	include 'db-conn.php';
 	$id = $_POST['id'];
-	$sort = $_POST['sort'] ?? '1';
+	$sort = intval($_POST['sort'] ?? '1');
 	$name = $_POST['name'];
 	$link = $_POST['link'];
 	$favicon = $_POST['favicon'];
 	$remarks = $_POST['remarks'];
-	$u1 = $_POST['user1'] ?? '';
-	$u2 = $_POST['user2'] ?? '';
-	$u3 = $_POST['user3'] ?? '';
-	$u4 = $_POST['user4'] ?? '';
-	$u5 = $_POST['user5'] ?? '';
-	$u6 = $_POST['user6'] ?? '';
-	$u7 = $_POST['user7'] ?? '';
-	$u8 = $_POST['user8'] ?? '';
+	$u = array();
+	for ($i = 1; $i <= 8; $i++) {
+		$u[$i] = $_POST['user'.$i] ?? '';
+	}
 	$group = $_POST['group'];
 
-	$queryGroup = 'SELECT * From `groups`';
-
-	if (!$resultG = mysqli_query($con, $queryGroup)) {
-	    exit(mysqli_error($con));
+	$stmt = $con->prepare('SELECT `id` FROM `groups` WHERE `name` = ?');
+	$stmt->bind_param('s', $group);
+	if (!$stmt->execute()) {
+		exit(mysqli_error($con));
 	}
+	$groupFetch = $stmt->get_result()->fetch_assoc();
+	$stmt->close();
 
-	while($groupFetch = mysqli_fetch_assoc($resultG)) {
-		if($group == $groupFetch['name']){
-			if($id == '-1'){
-				$insert = 'INSERT INTO `bookmarks` (`id`, `sort`, `link`, `favicon`, `name`, `remarks`, `user1`, `user2`, `user3`, `user4`, `user5`, `user6`, `user7`, `user8`) VALUES (NULL, "'.$sort.'", "'.$link.'", "'.$favicon.'", "'.$name.'", "'.$remarks.'", "'.$u1.'", "'.$u2.'", "'.$u3.'", "'.$u4.'", "'.$u5.'", "'.$u6.'", "'.$u7.'", "'.$u8.'" )';
-				if (!$result = mysqli_query($con, $insert)) {
-			    	exit(mysqli_error($con));
-				}
-				$getID = 'SELECT `id` FROM `bookmarks` WHERE `link` = "'.$link.'" AND `favicon` = "'.$favicon.'" AND `name` = "'.$name.'" AND `remarks` = "'.$remarks.'"';
-				if (!$result = mysqli_query($con, $getID)) {
-			    	exit(mysqli_error($con));
-				}
-				$idFetch = mysqli_fetch_assoc($result);
-				$insert2 = 'INSERT INTO `link-groups-bookmarks` (`group-id`, `bookmark-id`) VALUES ("'.$groupFetch['id'].'", "'.$idFetch['id'].'")';
-				if (!$result = mysqli_query($con, $insert2)) {
-			    	exit(mysqli_error($con));
-				}
-			}else{
-				$insert = 'UPDATE `bookmarks` SET `link` = "'.$link.'", `favicon` = "'.$favicon.'", `name` = "'.$name.'", `remarks` = "'.$remarks.'", `user1` = "'.$u1.'", `user2` = "'.$u2.'", `user3` = "'.$u3.'", `user4` = "'.$u4.'", `user5` = "'.$u5.'", `user6` = "'.$u6.'", `user7` = "'.$u7.'", `user8` = "'.$u8.'" WHERE `bookmarks`.`id` = "'.$id.'"';
-				if (!$result = mysqli_query($con, $insert)) {
-			    	exit(mysqli_error($con));
-				}
-				$insert2 = 'UPDATE `link-groups-bookmarks` SET `group-id` = "'.$groupFetch['id'].'" WHERE `link-groups-bookmarks`.`bookmark-id` = "'.$id.'"';
-				if (!$result = mysqli_query($con, $insert2)) {
-			    	exit(mysqli_error($con));
-				}
+	if ($groupFetch) {
+		$groupId = intval($groupFetch['id']);
+		if($id == '-1'){
+			$stmt = $con->prepare('INSERT INTO `bookmarks` (`sort`, `link`, `favicon`, `name`, `remarks`, `user1`, `user2`, `user3`, `user4`, `user5`, `user6`, `user7`, `user8`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+			$stmt->bind_param('issssssssssss', $sort, $link, $favicon, $name, $remarks, $u[1], $u[2], $u[3], $u[4], $u[5], $u[6], $u[7], $u[8]);
+			if (!$stmt->execute()) {
+				exit(mysqli_error($con));
 			}
+			$bmId = $con->insert_id;
+			$stmt->close();
+			$stmt = $con->prepare('INSERT INTO `link-groups-bookmarks` (`group-id`, `bookmark-id`) VALUES (?, ?)');
+			$stmt->bind_param('ii', $groupId, $bmId);
+			if (!$stmt->execute()) {
+				exit(mysqli_error($con));
+			}
+			$stmt->close();
+		}else{
+			$bmId = intval($id);
+			$stmt = $con->prepare('UPDATE `bookmarks` SET `link` = ?, `favicon` = ?, `name` = ?, `remarks` = ?, `user1` = ?, `user2` = ?, `user3` = ?, `user4` = ?, `user5` = ?, `user6` = ?, `user7` = ?, `user8` = ? WHERE `bookmarks`.`id` = ?');
+			$stmt->bind_param('ssssssssssssi', $link, $favicon, $name, $remarks, $u[1], $u[2], $u[3], $u[4], $u[5], $u[6], $u[7], $u[8], $bmId);
+			if (!$stmt->execute()) {
+				exit(mysqli_error($con));
+			}
+			$stmt->close();
+			$stmt = $con->prepare('UPDATE `link-groups-bookmarks` SET `group-id` = ? WHERE `link-groups-bookmarks`.`bookmark-id` = ?');
+			$stmt->bind_param('ii', $groupId, $bmId);
+			if (!$stmt->execute()) {
+				exit(mysqli_error($con));
+			}
+			$stmt->close();
 		}
 	}
-	
+
 	http_response_code(200);
 	echo("OK");
 

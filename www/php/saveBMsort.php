@@ -11,13 +11,17 @@ if(isset($_POST['json'])){
 	$json = $_POST['json'];
 	$array = json_decode($json);
 
+	$stmt = $con->prepare('UPDATE `bookmarks` SET `sort` = ? WHERE `bookmarks`.`id` = ?');
 	foreach ($array as $id => $sort) {
-		$query = 'UPDATE `bookmarks` SET `sort` = "'.$sort.'" WHERE `bookmarks`.`id` = "'.$id.'"';
-		if (!$result = mysqli_query($con, $query)) {
-	    	exit(mysqli_error($con));
+		$bmId = intval($id);
+		$sortInt = intval($sort);
+		$stmt->bind_param('ii', $sortInt, $bmId);
+		if (!$stmt->execute()) {
+			exit(mysqli_error($con));
 		}
 	}
-	
+	$stmt->close();
+
 	http_response_code(200);
 	echo("OK");
 

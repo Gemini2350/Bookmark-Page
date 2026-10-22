@@ -4,6 +4,8 @@ FROM php:8.4.27-apache
 RUN a2enmod expires
 RUN docker-php-ext-install mysqli
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
+# defense-in-depth (php2shell stopgaps; the app uses no sessions)
+RUN { echo 'session.upload_progress.enabled = 0'; echo 'session.use_strict_mode = 1'; } > "$PHP_INI_DIR/conf.d/zz-hardening.ini"
 RUN apt-get update \
     && apt-get install -y --no-install-recommends mariadb-server curl \
     && rm -rf /var/lib/apt/lists/*

@@ -8,17 +8,21 @@
 
 if(isset($_POST['id'])){
 	include 'db-conn.php';
-	$id = $_POST['id'];
+	$id = intval($_POST['id']);
 
-    $delete = 'DELETE FROM `bookmarks` WHERE `bookmarks`.`id` = "'.$id.'"';
-    if (!$result = mysqli_query($con, $delete)) {
-        exit(mysqli_error($con));
-    }
-    $delete2 = 'DELETE FROM `link-groups-bookmarks` WHERE `link-groups-bookmarks`.`bookmark-id` = "'.$id.'"';
-    if (!$result = mysqli_query($con, $delete2)) {
-        exit(mysqli_error($con));
-    }
-	
+	$stmt = $con->prepare('DELETE FROM `bookmarks` WHERE `bookmarks`.`id` = ?');
+	$stmt->bind_param('i', $id);
+	if (!$stmt->execute()) {
+		exit(mysqli_error($con));
+	}
+	$stmt->close();
+	$stmt = $con->prepare('DELETE FROM `link-groups-bookmarks` WHERE `link-groups-bookmarks`.`bookmark-id` = ?');
+	$stmt->bind_param('i', $id);
+	if (!$stmt->execute()) {
+		exit(mysqli_error($con));
+	}
+	$stmt->close();
+
 	http_response_code(200);
 	echo("OK");
 

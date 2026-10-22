@@ -10,31 +10,38 @@ if(isset($_POST['old']) && isset($_POST['new']) && isset($_POST['json'])){
 	include 'db-conn.php';
 	$old = $_POST['old'];
 	$new = $_POST['new'];
-	$sort = $_POST['sort'] ?? '0';
+	$sort = intval($_POST['sort'] ?? '0');
 	$remark = $_POST['remark'] ?? '';
 	$variable = $_POST['variable'] ?? '';
 	$json = $_POST['json'];
 	$array = json_decode($json);
 
+	$stmt = $con->prepare('UPDATE `groups` SET `sort` = ? WHERE `groups`.`id` = ?');
 	foreach ($array as $group => $jsort) {
-		$query = 'UPDATE `groups` SET `sort` = "'.$jsort.'" WHERE `groups`.`id` = "'.$group.'"';
-		if (!$result = mysqli_query($con, $query)) {
-	    	exit(mysqli_error($con));
+		$groupId = intval($group);
+		$jsortInt = intval($jsort);
+		$stmt->bind_param('ii', $jsortInt, $groupId);
+		if (!$stmt->execute()) {
+			exit(mysqli_error($con));
 		}
 	}
-	
+	$stmt->close();
+
 	if($new != '-1'){
 		if($old == '-1'){
-			$insert = 'INSERT INTO `groups` (`id`, `sort`, `name`, `remarks`, `variable`) VALUES (NULL, "'.$sort.'", "'.$new.'", "'.$remark.'", "'.$variable.'")';
+			$stmt = $con->prepare('INSERT INTO `groups` (`sort`, `name`, `remarks`, `variable`) VALUES (?, ?, ?, ?)');
+			$stmt->bind_param('isss', $sort, $new, $remark, $variable);
 		}else{
-			$insert = 'UPDATE `groups` SET `name` = "'.$new.'", `remarks` = "'.$remark.'", `variable` = "'.$variable.'" WHERE `groups`.`id` = "'.$old.'"';
+			$oldId = intval($old);
+			$stmt = $con->prepare('UPDATE `groups` SET `name` = ?, `remarks` = ?, `variable` = ? WHERE `groups`.`id` = ?');
+			$stmt->bind_param('sssi', $new, $remark, $variable, $oldId);
 		}
-
-		if (!$result = mysqli_query($con, $insert)) {
-	    	exit(mysqli_error($con));
+		if (!$stmt->execute()) {
+			exit(mysqli_error($con));
 		}
+		$stmt->close();
 	}
-	
+
 	http_response_code(200);
 	echo("OK");
 
