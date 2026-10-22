@@ -1,5 +1,6 @@
 # All-in-one image: Apache/PHP + MariaDB in a single container.
-FROM php:8.4-apache
+# PHP pinned to >= 8.4.27: fixes PHP2Shell (CVE-2026-109618 / CVE-2026-109619)
+FROM php:8.4.27-apache
 RUN a2enmod expires
 RUN docker-php-ext-install mysqli
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
