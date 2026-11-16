@@ -34,3 +34,8 @@
 .edit-cell:empty::before {
     content: "\00a0";
 }
+.edit-cell[data-a]:empty::before {
+    content: attr(data-ph);
+    color: #999;
+    font-style: italic;
+}

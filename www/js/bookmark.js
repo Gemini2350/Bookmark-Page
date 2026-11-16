@@ -17,7 +17,7 @@ var GroupHide = {};
 var AltPressed = false;
 var ShiftPressed = false;
 var Mouseovered = false;
-var BMP_Version = '1.3.1';
+var BMP_Version = '1.3.2';
 var EditMode = false;
 
 // replaces {var} in Links/Favicon-URLs with the Group's Variable
@@ -26,28 +26,22 @@ function resolveVar(str, groupVar){
 	return str.split('{var}').join(groupVar);
 }
 
-// Edit-Mode: edit name/remarks/user-columns directly in the table
+// Edit-Mode: edit fields directly in the table, add new bookmarks inline
 function toggleEditMode(){
 	EditMode = !EditMode;
 	if(EditMode){
 		stopRefresh();
 		$('#editBtn').removeClass('btn-outline-light').addClass('btn-light');
-		applyEditMode();
 	}else{
 		$('#editBtn').removeClass('btn-light').addClass('btn-outline-light');
-		removeEditMode();
-		loadPage(refreshCallback);
 	}
+	Bookmarks = {};	// force a full re-render (table layout differs in Edit-Mode)
+	loadPage(refreshCallback);
 }
 
 function applyEditMode(){
 	$('[data-toggle="tooltip"]').tooltip('hide').tooltip('disable');
-	$('#searchData').find('td[data-f], th[data-g], td[data-g]').attr('contenteditable', 'true').addClass('edit-cell');
-}
-
-function removeEditMode(){
-	$('#searchData').find('.edit-cell').removeAttr('contenteditable').removeClass('edit-cell');
-	$('[data-toggle="tooltip"]').tooltip('enable');
+	$('#searchData').find('td[data-f], td[data-a], th[data-g], td[data-g]').attr('contenteditable', 'true').addClass('edit-cell');
 }
 
 function flashCell(cell, ok){
@@ -84,10 +78,11 @@ function saveCellEdit(cell){
 		if(!found)	return;
 		var bm = found.bookmark;
 		if(val === bm[field]){ cell.text(bm[field]); return; }
+		if((field === 'name' || field === 'link') && !val){ cell.text(bm[field]); flashCell(cell, false); return; }
+		if(field === 'favicon' && !val){ val = 'img/icons/bookmark.svg'; cell.text(val); }
 		var post = {id: bm.id, sort: bm.sort, name: bm.name, link: bm.link, favicon: bm.favicon, remarks: bm.remarks, group: found.group};
 		for (var i = 1; i <= 8; i++)	post['user'+i] = bm['user'+i];
 		post[field] = val;
-		if(field === 'name' && !val){ cell.text(bm[field]); flashCell(cell, false); return; }
 		$.post('php/saveBookmark.php', post, function(data,status){
 			if(data == 'OK'){
 				bm[field] = val;
@@ -175,23 +170,30 @@ function loadPage(callback){
 				GroupData = ret.groupdata;
 				Numbers = {};
 				var sendBMSort = {};
-				var html = '<table class="table table-hover"><thead><th style="width: 50px;" id="S-sort"><span class="SortIndex" id="SI-sort"></span></th><th id="S-name">Name<span class="SortIndex" id="SI-name"></span></th><th id="S-remarks">Remarks<span class="SortIndex" id="SI-remarks"></span></th>'
+				var html = '<table class="table table-hover"><thead><th style="width: 50px;" id="S-sort"><span class="SortIndex" id="SI-sort"></span></th><th id="S-name">Name<span class="SortIndex" id="SI-name"></span></th>'
+				if(EditMode)	html += '<th>Link</th>';
+				html += '<th id="S-remarks">Remarks<span class="SortIndex" id="SI-remarks"></span></th>'
 				for (var i = 1; i <= Global.userCol; i++) {
 					if(Global['hideU'+i] === '0'){
 						html += '<th id="S-user'+i+'" onclick="sort(\'user'+i+'\');">'+Global['nameU'+i]+'<span class="SortIndex" id="SI-user'+i+'"></span></th>';
 					}
 				}
 				html += '</thead><tbody id="searchData">';
-				var colspanNr = (parseInt(Global.userCol)+1);
+				var colspanNr = (parseInt(Global.userCol)+1) + (EditMode ? 1 : 0);
 				var gcid = 0;
 				Numbers.totalBMs = 0;
 				for (gName in Bookmarks){
 					html += '<tr class="GroupTitle" onclick="toggleGroup(\'g-'+gcid+'\');"><td id="gI-g-'+gcid+'" class="GroupIcon"><i data-feather="chevron-up" width="20" height="20"></i></td><th data-g="name">'+gName+'</th><td data-g="remarks" colspan="'+colspanNr+'" scope="row">'+GroupData[gName].remarks+'</td></tr>';
 					var groupVar = GroupData[gName].variable;
 					$.each(Bookmarks[gName], function(i, bookmark){
-						var bmLink = resolveVar(bookmark.link, groupVar);
-						var bmFav = resolveVar(bookmark.favicon, groupVar);
-						html += '<tr id="bm-'+bookmark.id+'" class="g-'+gcid+'" onclick="openInNewTab(\''+bmLink+'\');" data-toggle="tooltip" title="URL: '+bmLink+'"><td><img class="bm-img" src="'+bmFav+'" onerror="this.onerror=null; this.src=\'img/errorfav.svg\'"></img></td><td data-f="name">'+bookmark.name+'</td><td data-f="remarks">'+bookmark.remarks+'</td>';
+						if(EditMode){
+							// raw values incl. {var} templates, extra Link column, favicon as editable URL
+							html += '<tr id="bm-'+bookmark.id+'" class="g-'+gcid+'"><td data-f="favicon" class="small">'+bookmark.favicon+'</td><td data-f="name">'+bookmark.name+'</td><td data-f="link" class="small">'+bookmark.link+'</td><td data-f="remarks">'+bookmark.remarks+'</td>';
+						}else{
+							var bmLink = resolveVar(bookmark.link, groupVar);
+							var bmFav = resolveVar(bookmark.favicon, groupVar);
+							html += '<tr id="bm-'+bookmark.id+'" class="g-'+gcid+'" onclick="openInNewTab(\''+bmLink+'\');" data-toggle="tooltip" title="URL: '+bmLink+'"><td><img class="bm-img" src="'+bmFav+'" onerror="this.onerror=null; this.src=\'img/errorfav.svg\'"></img></td><td data-f="name">'+bookmark.name+'</td><td data-f="remarks">'+bookmark.remarks+'</td>';
+						}
 						for (var j = 1; j <= Global.userCol; j++) {
 							html += '<td data-f="user'+j+'"'
 							if(Global['hideU'+j] !== '0')	html += ' style="display: none;"'
@@ -204,6 +206,16 @@ function loadPage(callback){
 							sendBMSort[bookmark.id] = i+1;
 						}
 					});
+					if(EditMode){
+						// empty row to add a new bookmark to this group
+						html += '<tr class="addRow g-'+gcid+'" data-gidx="'+gcid+'"><td data-a="favicon" data-ph="favicon-url (optional)" class="small"></td><td data-a="name" data-ph="+ new Bookmark..."></td><td data-a="link" data-ph="http://... (required)" class="small"></td><td data-a="remarks" data-ph="remarks"></td>';
+						for (var j = 1; j <= Global.userCol; j++) {
+							html += '<td data-a="user'+j+'"'
+							if(Global['hideU'+j] !== '0')	html += ' style="display: none;"'
+							html += '></td>';
+						}
+						html += '</tr>';
+					}
 					gcid++;
 				}
 				Numbers.groups = gcid;
@@ -1046,6 +1058,41 @@ function moveBookmarks(){
 	});
 }
 
+function tryCreateFromAddRow(row){
+	if(row.data('busy'))	return;
+	var gidx = parseInt(row.attr('data-gidx'));
+	var gName = Object.keys(Bookmarks)[gidx];
+	var name = row.find('[data-a=name]').text().trim();
+	var link = row.find('[data-a=link]').text().trim();
+	if(!name || !link)	return;	// wait until both are filled
+	row.data('busy', true);
+	var post = {
+		id: '-1',
+		sort: (Numbers[gName] || 0) + 1,
+		name: name,
+		link: link,
+		favicon: row.find('[data-a=favicon]').text().trim() || 'img/icons/bookmark.svg',
+		remarks: row.find('[data-a=remarks]').text().trim(),
+		group: gName
+	};
+	for (var i = 1; i <= 8; i++){
+		var uCell = row.find('[data-a=user'+i+']');
+		post['user'+i] = uCell.length ? uCell.text().trim() : '';
+	}
+	$.post('php/saveBookmark.php', post, function(data,status){
+		if(data == 'OK'){
+			Bookmarks = {};	// force re-render: new row becomes a normal editable row
+			loadPage(refreshCallback);
+		}else{
+			row.removeData('busy');
+			flashCell(row.find('[data-a=name]'), false);
+		}
+	}).fail(function(){
+		row.removeData('busy');
+		flashCell(row.find('[data-a=name]'), false);
+	});
+}
+
 function importBookmarks(){
 	var file = $('#gcImportFile')[0].files[0];
 	if(!file)	return;
@@ -1151,7 +1198,11 @@ $(document).ready(function () {
 			$(this).removeData('cancel');
 			return;
 		}
-		saveCellEdit($(this));
+		if($(this).attr('data-a')){
+			tryCreateFromAddRow($(this).closest('tr'));
+		}else{
+			saveCellEdit($(this));
+		}
 	});
 	$('#gcImportFile').change(function(){
 		var file = this.files[0];

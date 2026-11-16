@@ -49,7 +49,7 @@ else
     # idempotent migrations for existing data volumes
     mariadb "$DB_NAME" <<'MIGRATE'
 ALTER TABLE `groups` ADD COLUMN IF NOT EXISTS `variable` varchar(255) NOT NULL DEFAULT '';
-UPDATE `global` SET `value` = '1.3.1' WHERE `key` = 'version' AND (`value` LIKE '1.2%' OR `value` = '1.3.0');
+UPDATE `global` SET `value` = '1.3.2' WHERE `key` = 'version' AND (`value` LIKE '1.2%' OR `value` IN ('1.3.0', '1.3.1'));
 MIGRATE
 fi
 
