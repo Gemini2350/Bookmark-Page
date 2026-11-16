@@ -35,6 +35,11 @@ Alternatively clone the Repo and use `docker compose up -d`.
   - Import a previously exported JSON file: existing Groups are reused, Bookmarks whose
     Link already exists are skipped
   - Danger Zone: delete all Bookmarks (optionally incl. all Groups) at once
+- **Edit-Mode**: the pencil button in the navbar toggles inline editing — Name, Remarks
+  and User-Columns of Bookmarks as well as Group names/remarks become editable directly
+  in the table (Enter/click-away saves, Esc cancels). While active, clicks don't open
+  links and the auto-refresh is paused; Link and Favicon-URL are still edited via the
+  Bookmarks tab
 - **Move Bookmarks**: new Move tab in the Global-Configuration modal — tick several
   Bookmarks of one Group and move them to another Group in one go
 - **Group Variables**: each Group can define a Variable (Globals-Configuration → Groups tab).

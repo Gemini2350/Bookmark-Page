@@ -19,3 +19,18 @@
     height:18px;
     border:1px solid #495057;
 }
+/* Edit-Mode: inline editing of table cells */
+.edit-cell {
+    outline: 1px dashed #adb5bd;
+    outline-offset: -3px;
+    cursor: text;
+    min-width: 60px;
+}
+.edit-cell:focus {
+    outline: 2px solid #007bff;
+    outline-offset: -3px;
+    background-color: #fff;
+}
+.edit-cell:empty::before {
+    content: "\00a0";
+}

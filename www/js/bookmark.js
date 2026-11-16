@@ -17,12 +17,115 @@ var GroupHide = {};
 var AltPressed = false;
 var ShiftPressed = false;
 var Mouseovered = false;
-var BMP_Version = '1.3.0';
+var BMP_Version = '1.3.1';
+var EditMode = false;
 
 // replaces {var} in Links/Favicon-URLs with the Group's Variable
 function resolveVar(str, groupVar){
 	if(!str || !groupVar)	return str;
 	return str.split('{var}').join(groupVar);
+}
+
+// Edit-Mode: edit name/remarks/user-columns directly in the table
+function toggleEditMode(){
+	EditMode = !EditMode;
+	if(EditMode){
+		stopRefresh();
+		$('#editBtn').removeClass('btn-outline-light').addClass('btn-light');
+		applyEditMode();
+	}else{
+		$('#editBtn').removeClass('btn-light').addClass('btn-outline-light');
+		removeEditMode();
+		loadPage(refreshCallback);
+	}
+}
+
+function applyEditMode(){
+	$('[data-toggle="tooltip"]').tooltip('hide').tooltip('disable');
+	$('#searchData').find('td[data-f], th[data-g], td[data-g]').attr('contenteditable', 'true').addClass('edit-cell');
+}
+
+function removeEditMode(){
+	$('#searchData').find('.edit-cell').removeAttr('contenteditable').removeClass('edit-cell');
+	$('[data-toggle="tooltip"]').tooltip('enable');
+}
+
+function flashCell(cell, ok){
+	cell.css('background-color', ok ? '#d4edda' : '#f8d7da');
+	setTimeout(function(){ cell.css('background-color', ''); }, 800);
+}
+
+function findBookmarkById(id){
+	var found = null;
+	for (var gName in Bookmarks){
+		$.each(Bookmarks[gName], function(i, bookmark){
+			if(bookmark.id == id){
+				found = {bookmark: bookmark, group: gName};
+				return false;
+			}
+		});
+		if(found)	break;
+	}
+	return found;
+}
+
+function groupNameFromRow(row){
+	var iconId = row.find('.GroupIcon').attr('id');	// gI-g-<n>
+	var n = parseInt(iconId.replace('gI-g-', ''));
+	return Object.keys(Bookmarks)[n];
+}
+
+function saveCellEdit(cell){
+	var val = cell.text().trim();
+	var field = cell.attr('data-f');
+	if(field){	// bookmark cell
+		var id = cell.closest('tr').attr('id').replace('bm-', '');
+		var found = findBookmarkById(id);
+		if(!found)	return;
+		var bm = found.bookmark;
+		if(val === bm[field]){ cell.text(bm[field]); return; }
+		var post = {id: bm.id, sort: bm.sort, name: bm.name, link: bm.link, favicon: bm.favicon, remarks: bm.remarks, group: found.group};
+		for (var i = 1; i <= 8; i++)	post['user'+i] = bm['user'+i];
+		post[field] = val;
+		if(field === 'name' && !val){ cell.text(bm[field]); flashCell(cell, false); return; }
+		$.post('php/saveBookmark.php', post, function(data,status){
+			if(data == 'OK'){
+				bm[field] = val;
+				flashCell(cell, true);
+			}else{
+				cell.text(bm[field]);
+				flashCell(cell, false);
+			}
+		}).fail(function(){ cell.text(bm[field]); flashCell(cell, false); });
+	}else{	// group cell
+		field = cell.attr('data-g');
+		var gName = groupNameFromRow(cell.closest('tr'));
+		if(!gName || !GroupData[gName])	return;
+		var g = GroupData[gName];
+		var oldVal = (field === 'name') ? gName : g.remarks;
+		if(val === oldVal){ cell.text(oldVal); return; }
+		if(field === 'name' && (!val || val === '-1' || Bookmarks[val])){ cell.text(oldVal); flashCell(cell, false); return; }
+		$.post('php/saveGroup.php', {
+			old: g.id,
+			new: (field === 'name') ? val : gName,
+			remark: (field === 'remarks') ? val : g.remarks,
+			variable: g.variable,
+			sort: g.sort,
+			json: '{}'
+		}, function(data,status){
+			if(data == 'OK'){
+				flashCell(cell, true);
+				if(field === 'name'){
+					loadPage(function(){ if(EditMode) applyEditMode(); });
+				}else{
+					g.remarks = val;
+				}
+			}else{
+				cell.text(oldVal);
+				flashCell(cell, false);
+			}
+		}).fail(function(){ cell.text(oldVal); flashCell(cell, false); });
+	}
 }
 
 // Functions
@@ -83,14 +186,14 @@ function loadPage(callback){
 				var gcid = 0;
 				Numbers.totalBMs = 0;
 				for (gName in Bookmarks){
-					html += '<tr class="GroupTitle" onclick="toggleGroup(\'g-'+gcid+'\');"><td id="gI-g-'+gcid+'" class="GroupIcon"><i data-feather="chevron-up" width="20" height="20"></i></td><th>'+gName+'</th><td colspan="'+colspanNr+'" scope="row">'+GroupData[gName].remarks+'</td></tr>';
+					html += '<tr class="GroupTitle" onclick="toggleGroup(\'g-'+gcid+'\');"><td id="gI-g-'+gcid+'" class="GroupIcon"><i data-feather="chevron-up" width="20" height="20"></i></td><th data-g="name">'+gName+'</th><td data-g="remarks" colspan="'+colspanNr+'" scope="row">'+GroupData[gName].remarks+'</td></tr>';
 					var groupVar = GroupData[gName].variable;
 					$.each(Bookmarks[gName], function(i, bookmark){
 						var bmLink = resolveVar(bookmark.link, groupVar);
 						var bmFav = resolveVar(bookmark.favicon, groupVar);
-						html += '<tr id="bm-'+bookmark.id+'" class="g-'+gcid+'" onclick="openInNewTab(\''+bmLink+'\');" data-toggle="tooltip" title="URL: '+bmLink+'"><td><img class="bm-img" src="'+bmFav+'" onerror="this.onerror=null; this.src=\'img/errorfav.svg\'"></img></td><td>'+bookmark.name+'</td><td>'+bookmark.remarks+'</td>';
+						html += '<tr id="bm-'+bookmark.id+'" class="g-'+gcid+'" onclick="openInNewTab(\''+bmLink+'\');" data-toggle="tooltip" title="URL: '+bmLink+'"><td><img class="bm-img" src="'+bmFav+'" onerror="this.onerror=null; this.src=\'img/errorfav.svg\'"></img></td><td data-f="name">'+bookmark.name+'</td><td data-f="remarks">'+bookmark.remarks+'</td>';
 						for (var j = 1; j <= Global.userCol; j++) {
-							html += '<td'
+							html += '<td data-f="user'+j+'"'
 							if(Global['hideU'+j] !== '0')	html += ' style="display: none;"'
 							html += '>'+bookmark['user'+j]+'</td>';
 						}
@@ -120,6 +223,7 @@ function loadPage(callback){
 				$('#S-sort').click(function(){sort('sort');});
 				$('#S-name').click(function(){sort('name');});
 				$('#S-remarks').click(function(){sort('remarks');});
+				if(EditMode)	applyEditMode();
 				if(!$.isEmptyObject(sendBMSort)){
 					$.post('php/saveBMsort.php', {
 						json: JSON.stringify(sendBMSort)
@@ -175,6 +279,7 @@ function sort(row){
 }
 
 function toggleGroup(groupClass){
+	if(EditMode)	return;
 	var d = new Date();
 	d.setTime(d.getTime() + (365*24*60*60*1000));
 	var expires = "expires="+ d.toUTCString();
@@ -200,6 +305,7 @@ function reToggleGroup(){
 }
 
 function openInNewTab(url){
+	if(EditMode)	return;
 	if(!AltPressed){
 		if(ShiftPressed){
 			ShiftPressed = false;
@@ -1030,6 +1136,23 @@ $(document).ready(function () {
 	}
 	loadPage(function(){$("#searchInput").focus();});
 	$('#configBtn').click(function(){openConfig();});
+	$('#editBtn').click(function(){toggleEditMode(); this.blur();});
+	$('#bookmarks').on('focusin', '.edit-cell', function(){
+		$(this).data('orig', $(this).text());
+	}).on('keydown', '.edit-cell', function(e){
+		if(e.which === 13){	// Enter: save
+			e.preventDefault();
+			$(this).blur();
+		}else if(e.which === 27){	// Esc: cancel
+			$(this).text($(this).data('orig')).data('cancel', true).blur();
+		}
+	}).on('focusout', '.edit-cell', function(){
+		if($(this).data('cancel')){
+			$(this).removeData('cancel');
+			return;
+		}
+		saveCellEdit($(this));
+	});
 	$('#gcImportFile').change(function(){
 		var file = this.files[0];
 		if(file){
