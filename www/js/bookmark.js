@@ -17,7 +17,7 @@ var GroupHide = {};
 var AltPressed = false;
 var ShiftPressed = false;
 var Mouseovered = false;
-var BMP_Version = '1.3.5';
+var BMP_Version = '1.3.6';
 var EditMode = false;
 
 // replaces {var} in Links/Favicon-URLs with the Group's Variable
@@ -235,9 +235,25 @@ function loadPage(callback){
 				GroupData = ret.groupdata;
 				Numbers = {};
 				var sendBMSort = {};
-				var html = '<table class="table table-hover"><thead>'
-				if(EditMode)	html += '<th style="width: 30px;"></th>';
-				html += '<th style="width: 50px;" id="S-sort"><span class="SortIndex" id="SI-sort"></span></th><th id="S-name">Name<span class="SortIndex" id="SI-name"></span></th>'
+				// fixed column widths so collapsing groups or filtering never
+				// shifts the header (table-layout: fixed + colgroup)
+				var visibleU = 0;
+				for (var i = 1; i <= Global.userCol; i++) {
+					if(Global['hideU'+i] === '0')	visibleU++;
+				}
+				var uWidth = (visibleU > 0) ? Math.min(12, Math.floor(44 / visibleU)) : 0;
+				var html = '<table class="table table-hover"><colgroup>'
+				if(EditMode){
+					html += '<col style="width: 34px;"><col style="width: 17%;"><col style="width: 15%;"><col style="width: 20%;"><col>';
+				}else{
+					html += '<col style="width: 56px;"><col style="width: 24%;"><col>';
+				}
+				for (var i = 0; i < visibleU; i++) {
+					html += '<col style="width: '+uWidth+'%;">';
+				}
+				html += '</colgroup><thead>'
+				if(EditMode)	html += '<th></th>';
+				html += '<th id="S-sort"><span class="SortIndex" id="SI-sort"></span></th><th id="S-name">Name<span class="SortIndex" id="SI-name"></span></th>'
 				if(EditMode)	html += '<th>Link</th>';
 				html += '<th id="S-remarks">Remarks<span class="SortIndex" id="SI-remarks"></span></th>'
 				for (var i = 1; i <= Global.userCol; i++) {

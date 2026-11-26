@@ -153,3 +153,12 @@ body {
 .copy-cell {
     cursor: copy;
 }
+#bookmarks .table {
+    table-layout: fixed;
+}
+#bookmarks td, #bookmarks th {
+    overflow-wrap: break-word;
+}
+#bookmarks td.small {
+    word-break: break-all;
+}

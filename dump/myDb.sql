@@ -96,7 +96,7 @@ INSERT INTO `global` (`key`, `value`) VALUES
 ('nameU8', 'Label 8'),
 ('refresh', '30'),
 ('userCol', '0'),
-('version', '1.3.5');
+('version', '1.3.6');
 
 -- --------------------------------------------------------
 
