@@ -43,6 +43,9 @@ Alternatively clone the Repo and use `docker compose up -d`.
   Drag the handle on the left to reorder Bookmarks — drop a row into another Group
   (works for empty Groups too) to move it there. While active, clicks don't open links
   and the auto-refresh is paused
+- **Click-to-copy**: clicking the Remarks or a User-Column cell copies its content to
+  the clipboard instead of opening the link (handy for passwords/logins stored there);
+  the Name and favicon still open the Bookmark
 - **Move Bookmarks**: new Move tab in the Global-Configuration modal — tick several
   Bookmarks of one Group and move them to another Group in one go
 - **Group Variables**: each Group can define a Variable (Globals-Configuration → Groups tab).

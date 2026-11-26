@@ -17,7 +17,7 @@ var GroupHide = {};
 var AltPressed = false;
 var ShiftPressed = false;
 var Mouseovered = false;
-var BMP_Version = '1.3.4';
+var BMP_Version = '1.3.5';
 var EditMode = false;
 
 // replaces {var} in Links/Favicon-URLs with the Group's Variable
@@ -263,12 +263,13 @@ function loadPage(callback){
 						}else{
 							var bmLink = resolveVar(bookmark.link, groupVar);
 							var bmFav = resolveVar(bookmark.favicon, groupVar);
-							html += '<tr id="bm-'+bookmark.id+'" class="g-'+gcid+'" onclick="openInNewTab(\''+bmLink+'\');" data-toggle="tooltip" title="URL: '+bmLink+'"><td><img class="bm-img" src="'+bmFav+'" onerror="this.onerror=null; this.src=\'img/errorfav.svg\'"></img></td><td data-f="name">'+bookmark.name+'</td><td data-f="remarks">'+bookmark.remarks+'</td>';
+							html += '<tr id="bm-'+bookmark.id+'" class="g-'+gcid+'" onclick="openInNewTab(\''+bmLink+'\');" data-toggle="tooltip" title="URL: '+bmLink+'"><td><img class="bm-img" src="'+bmFav+'" onerror="this.onerror=null; this.src=\'img/errorfav.svg\'"></img></td><td data-f="name">'+bookmark.name+'</td><td data-f="remarks" class="copy-cell" title="click to copy" onclick="copyCellClick(event, this);">'+bookmark.remarks+'</td>';
 						}
 						for (var j = 1; j <= Global.userCol; j++) {
 							var uVal = bookmark['user'+j];
 							if(!EditMode && uVal)	uVal = '<span class="user-pill">'+uVal+'</span>';
 							html += '<td data-f="user'+j+'"'
+							if(!EditMode)	html += ' class="copy-cell" title="click to copy" onclick="copyCellClick(event, this);"'
 							if(Global['hideU'+j] !== '0')	html += ' style="display: none;"'
 							html += '>'+uVal+'</td>';
 						}
@@ -1128,6 +1129,36 @@ function moveBookmarks(){
 		var msg = 'Move failed!';
 		if(xhr.responseJSON && xhr.responseJSON.error)	msg += ' '+xhr.responseJSON.error;
 		$('#gcMoveResult').html('<div class="alert alert-danger">'+msg+'</div>');
+	});
+}
+
+function copyText(txt, done){
+	if(navigator.clipboard && window.isSecureContext){
+		navigator.clipboard.writeText(txt).then(function(){ done(true); }, function(){ done(false); });
+	}else{
+		// fallback for plain-http hosts
+		var ta = document.createElement('textarea');
+		ta.value = txt;
+		ta.style.position = 'fixed';
+		ta.style.opacity = '0';
+		document.body.appendChild(ta);
+		ta.select();
+		var ok = false;
+		try { ok = document.execCommand('copy'); } catch(e) {}
+		document.body.removeChild(ta);
+		done(ok);
+	}
+}
+
+// clicking remarks/user cells copies their content instead of opening the link
+function copyCellClick(e, el){
+	e.stopPropagation();
+	if(EditMode)	return;
+	var cell = $(el);
+	var txt = cell.text().trim();
+	if(!txt)	return;
+	copyText(txt, function(ok){
+		flashCell(cell, ok);
 	});
 }
 

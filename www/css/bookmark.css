@@ -150,3 +150,6 @@ body {
     color: #fff;
     background: #51606e;
 }
+.copy-cell {
+    cursor: copy;
+}
