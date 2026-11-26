@@ -39,3 +39,12 @@
     color: #999;
     font-style: italic;
 }
+.drag-handle {
+    cursor: grab;
+    color: #adb5bd;
+    width: 30px;
+}
+.sortable-ghost {
+    opacity: .4;
+    background-color: #cce5ff;
+}

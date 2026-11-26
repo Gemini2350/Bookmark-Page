@@ -17,7 +17,7 @@ var GroupHide = {};
 var AltPressed = false;
 var ShiftPressed = false;
 var Mouseovered = false;
-var BMP_Version = '1.3.2';
+var BMP_Version = '1.3.3';
 var EditMode = false;
 
 // replaces {var} in Links/Favicon-URLs with the Group's Variable
@@ -31,6 +31,7 @@ function toggleEditMode(){
 	EditMode = !EditMode;
 	if(EditMode){
 		stopRefresh();
+		Sort = {row: 'sort', asc: true};	// drag positions must match the stored sort
 		$('#editBtn').removeClass('btn-outline-light').addClass('btn-light');
 	}else{
 		$('#editBtn').removeClass('btn-light').addClass('btn-outline-light');
@@ -42,6 +43,70 @@ function toggleEditMode(){
 function applyEditMode(){
 	$('[data-toggle="tooltip"]').tooltip('hide').tooltip('disable');
 	$('#searchData').find('td[data-f], td[data-a], th[data-g], td[data-g]').attr('contenteditable', 'true').addClass('edit-cell');
+	// drag & drop: reorder within a group, drop into another group to move
+	// addRows are included as drop anchors (they have no handle, so they
+	// can't be dragged themselves) - this makes empty groups a valid target
+	Sortable.create(document.getElementById('searchData'), {
+		draggable: 'tr[id^=bm-], tr.addRow',
+		handle: '.drag-handle',
+		animation: 150,
+		onEnd: function(){ dragSortSave(); }
+	});
+}
+
+function dragSortSave(){
+	var gNames = Object.keys(Bookmarks);
+	var moves = {};		// target group -> [bookmark ids]
+	var sortMap = {};	// bookmark id -> new sort
+	var current = null;
+	var pos = 0;
+	$('#searchData tr').each(function(){
+		if($(this).hasClass('GroupTitle')){
+			var n = parseInt($(this).find('.GroupIcon').attr('id').replace('gI-g-', ''));
+			current = gNames[n];
+			pos = 0;
+		}else if(this.id && this.id.indexOf('bm-') === 0 && current){
+			var id = this.id.replace('bm-', '');
+			pos++;
+			var found = findBookmarkById(id);
+			if(found){
+				if(found.group !== current){
+					if(!moves[current])	moves[current] = [];
+					moves[current].push(id);
+				}
+				if(parseInt(found.bookmark.sort) !== pos || found.group !== current){
+					sortMap[id] = pos;
+				}
+			}
+		}
+	});
+	var finish = function(){
+		if(!$.isEmptyObject(sortMap)){
+			$.post('php/saveBMsort.php', {
+				json: JSON.stringify(sortMap)
+			}, function(data,status){
+				Bookmarks = {};
+				loadPage(refreshCallback);
+			});
+		}else{
+			Bookmarks = {};
+			loadPage(refreshCallback);
+		}
+	};
+	var targets = Object.keys(moves);
+	if(targets.length){
+		var done = 0;
+		$.each(targets, function(i, target){
+			$.post('php/moveBookmarks.php', {
+				target: target,
+				json: JSON.stringify(moves[target])
+			}, function(data,status){
+				if(++done === targets.length)	finish();
+			});
+		});
+	}else{
+		finish();
+	}
 }
 
 function flashCell(cell, ok){
@@ -170,7 +235,9 @@ function loadPage(callback){
 				GroupData = ret.groupdata;
 				Numbers = {};
 				var sendBMSort = {};
-				var html = '<table class="table table-hover"><thead><th style="width: 50px;" id="S-sort"><span class="SortIndex" id="SI-sort"></span></th><th id="S-name">Name<span class="SortIndex" id="SI-name"></span></th>'
+				var html = '<table class="table table-hover"><thead>'
+				if(EditMode)	html += '<th style="width: 30px;"></th>';
+				html += '<th style="width: 50px;" id="S-sort"><span class="SortIndex" id="SI-sort"></span></th><th id="S-name">Name<span class="SortIndex" id="SI-name"></span></th>'
 				if(EditMode)	html += '<th>Link</th>';
 				html += '<th id="S-remarks">Remarks<span class="SortIndex" id="SI-remarks"></span></th>'
 				for (var i = 1; i <= Global.userCol; i++) {
@@ -183,12 +250,14 @@ function loadPage(callback){
 				var gcid = 0;
 				Numbers.totalBMs = 0;
 				for (gName in Bookmarks){
-					html += '<tr class="GroupTitle" onclick="toggleGroup(\'g-'+gcid+'\');"><td id="gI-g-'+gcid+'" class="GroupIcon"><i data-feather="chevron-up" width="20" height="20"></i></td><th data-g="name">'+gName+'</th><td data-g="remarks" colspan="'+colspanNr+'" scope="row">'+GroupData[gName].remarks+'</td></tr>';
+					html += '<tr class="GroupTitle" onclick="toggleGroup(\'g-'+gcid+'\');">';
+					if(EditMode)	html += '<td></td>';
+					html += '<td id="gI-g-'+gcid+'" class="GroupIcon"><i data-feather="chevron-up" width="20" height="20"></i></td><th data-g="name">'+gName+'</th><td data-g="remarks" colspan="'+colspanNr+'" scope="row">'+GroupData[gName].remarks+'</td></tr>';
 					var groupVar = GroupData[gName].variable;
 					$.each(Bookmarks[gName], function(i, bookmark){
 						if(EditMode){
-							// raw values incl. {var} templates, extra Link column, favicon as editable URL
-							html += '<tr id="bm-'+bookmark.id+'" class="g-'+gcid+'"><td data-f="favicon" class="small">'+bookmark.favicon+'</td><td data-f="name">'+bookmark.name+'</td><td data-f="link" class="small">'+bookmark.link+'</td><td data-f="remarks">'+bookmark.remarks+'</td>';
+							// raw values incl. {var} templates, drag handle, extra Link column, favicon as editable URL
+							html += '<tr id="bm-'+bookmark.id+'" class="g-'+gcid+'"><td class="drag-handle"><i data-feather="move" width="16" height="16"></i></td><td data-f="favicon" class="small">'+bookmark.favicon+'</td><td data-f="name">'+bookmark.name+'</td><td data-f="link" class="small">'+bookmark.link+'</td><td data-f="remarks">'+bookmark.remarks+'</td>';
 						}else{
 							var bmLink = resolveVar(bookmark.link, groupVar);
 							var bmFav = resolveVar(bookmark.favicon, groupVar);
@@ -208,7 +277,7 @@ function loadPage(callback){
 					});
 					if(EditMode){
 						// empty row to add a new bookmark to this group
-						html += '<tr class="addRow g-'+gcid+'" data-gidx="'+gcid+'"><td data-a="favicon" data-ph="favicon-url (optional)" class="small"></td><td data-a="name" data-ph="+ new Bookmark..."></td><td data-a="link" data-ph="http://... (required)" class="small"></td><td data-a="remarks" data-ph="remarks"></td>';
+						html += '<tr class="addRow g-'+gcid+'" data-gidx="'+gcid+'"><td></td><td data-a="favicon" data-ph="favicon-url (optional)" class="small"></td><td data-a="name" data-ph="+ new Bookmark..."></td><td data-a="link" data-ph="http://... (required)" class="small"></td><td data-a="remarks" data-ph="remarks"></td>';
 						for (var j = 1; j <= Global.userCol; j++) {
 							html += '<td data-a="user'+j+'"'
 							if(Global['hideU'+j] !== '0')	html += ' style="display: none;"'

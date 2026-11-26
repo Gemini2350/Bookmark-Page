@@ -40,7 +40,9 @@ Alternatively clone the Repo and use `docker compose up -d`.
   fields of Bookmarks as well as Group names/remarks become editable directly in the
   table (Enter/click-away saves, Esc cancels). Each Group gets an empty "+ new
   Bookmark..." row: type Name and Link, hit Enter — the Bookmark is created inline.
-  While active, clicks don't open links and the auto-refresh is paused
+  Drag the handle on the left to reorder Bookmarks — drop a row into another Group
+  (works for empty Groups too) to move it there. While active, clicks don't open links
+  and the auto-refresh is paused
 - **Move Bookmarks**: new Move tab in the Global-Configuration modal — tick several
   Bookmarks of one Group and move them to another Group in one go
 - **Group Variables**: each Group can define a Variable (Globals-Configuration → Groups tab).
