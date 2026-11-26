@@ -18,37 +18,33 @@
     <title>Bookmark-Page</title>
     <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico">
   </head>
-  <body style="background-color: #6c757d;">
-    <nav class="navbar navbar-dark" style="background-color: #343a40;">
+  <body style="background-color: #eef1f4;">
+    <nav class="navbar navbar-dark" style="background-color: #222b36;">
       <div>
         <img src="img/logo.svg" class="mr-2 mb-1" height="33"></img>
         <a class="navbar-brand" href="" id="page-name">Page-Name</a>
       </div>
       <form class="form-inline">
+        <div class="input-group topbar-search mr-2">
+          <input type="search" class="form-control" id="searchInput" placeholder="Search..." aria-label="Search..." aria-describedby="search-addon">
+          <div class="input-group-append">
+            <span class="input-group-text" id="search-addon1"><i data-feather="search" id="search-addon" width="20" height="20"></i></span>
+          </div>
+        </div>
         <button type="button" class="btn btn-outline-light my-2 my-sm-0 mr-2 d-flex align-items-center" id="editBtn" title="Toggle Edit-Mode: edit fields directly in the table"><i data-feather="edit-2" width="22" height="22"></i></button>
         <button type="button" class="btn btn-outline-light my-2 my-sm-0 d-flex align-items-center" id="configBtn"><i data-feather="settings" width="22" height="22"></i></button>
       </form>
     </nav>
     <div class="container">
-      <div class="card bg-light mt-3">
+      <div class="card main-panel mt-4">
         <div class="card-body">
-          <div class="row align-items-center mb-1">
-            <div class="col-lg-7">
-              <h5 class="card-title" id="pageClaim">Claim</h5>
-            </div>
-            <div class="input-group col-lg-5 mb-2">
-              <input type="search" class="form-control" id="searchInput" placeholder="Search..." aria-label="Search..." aria-describedby="search-addon">
-              <div class="input-group-append">
-                <span class="input-group-text" id="search-addon1"><i data-feather="search" id="search-addon" width="20" height="20"></i></span>
-              </div>
-            </div>
-          </div>
+          <h5 class="card-title" id="pageClaim">Claim</h5>
           <div class="table-responsive mb-2" id="bookmarks">loading... </div>
         </div>
       </div>
-      <div class="text-center">
+      <div class="text-center text-muted page-foot">
         <small>written by Adi Hilber &amp; Oliver Ettlin, Simplexity | v<span id="version"></span></small><br/>
-        <small style="padding-bottom: 10px;">Pro-Tipp: hold <kbd style="color:#ccc;">Shift</kbd> to open the Bookmark in a new Window or hold <kbd style="color:#ccc;">Alt</kbd> to mark Text from Bookmarks</small>
+        <small style="padding-bottom: 10px;">Pro-Tipp: hold <kbd>Shift</kbd> to open the Bookmark in a new Window or hold <kbd>Alt</kbd> to mark Text from Bookmarks</small>
       </div>
     </div>
     <!-- Modal - Global-Config -->

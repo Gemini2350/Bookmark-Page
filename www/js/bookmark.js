@@ -17,7 +17,7 @@ var GroupHide = {};
 var AltPressed = false;
 var ShiftPressed = false;
 var Mouseovered = false;
-var BMP_Version = '1.3.3';
+var BMP_Version = '1.3.4';
 var EditMode = false;
 
 // replaces {var} in Links/Favicon-URLs with the Group's Variable
@@ -250,10 +250,12 @@ function loadPage(callback){
 				var gcid = 0;
 				Numbers.totalBMs = 0;
 				for (gName in Bookmarks){
+					var groupVar = GroupData[gName].variable;
 					html += '<tr class="GroupTitle" onclick="toggleGroup(\'g-'+gcid+'\');">';
 					if(EditMode)	html += '<td></td>';
-					html += '<td id="gI-g-'+gcid+'" class="GroupIcon"><i data-feather="chevron-up" width="20" height="20"></i></td><th data-g="name">'+gName+'</th><td data-g="remarks" colspan="'+colspanNr+'" scope="row">'+GroupData[gName].remarks+'</td></tr>';
-					var groupVar = GroupData[gName].variable;
+					html += '<td id="gI-g-'+gcid+'" class="GroupIcon"><i data-feather="chevron-up" width="20" height="20"></i></td><th data-g="name">'+gName+'</th><td data-g="remarks" colspan="'+colspanNr+'" scope="row">'+GroupData[gName].remarks;
+					if(!EditMode && groupVar)	html += '<span class="gvar-chip">'+groupVar+'</span>';
+					html += '</td></tr>';
 					$.each(Bookmarks[gName], function(i, bookmark){
 						if(EditMode){
 							// raw values incl. {var} templates, drag handle, extra Link column, favicon as editable URL
@@ -264,9 +266,11 @@ function loadPage(callback){
 							html += '<tr id="bm-'+bookmark.id+'" class="g-'+gcid+'" onclick="openInNewTab(\''+bmLink+'\');" data-toggle="tooltip" title="URL: '+bmLink+'"><td><img class="bm-img" src="'+bmFav+'" onerror="this.onerror=null; this.src=\'img/errorfav.svg\'"></img></td><td data-f="name">'+bookmark.name+'</td><td data-f="remarks">'+bookmark.remarks+'</td>';
 						}
 						for (var j = 1; j <= Global.userCol; j++) {
+							var uVal = bookmark['user'+j];
+							if(!EditMode && uVal)	uVal = '<span class="user-pill">'+uVal+'</span>';
 							html += '<td data-f="user'+j+'"'
 							if(Global['hideU'+j] !== '0')	html += ' style="display: none;"'
-							html += '>'+bookmark['user'+j]+'</td>';
+							html += '>'+uVal+'</td>';
 						}
 						html += '</tr>';
 						Numbers[gName] = i+1;
@@ -420,32 +424,32 @@ function changeBg(color){
 	var bgColour, navColour;
 	switch(color){
 		case 'red':
-			bgColour = '#663333';
-			navColour = '#402020';
+			bgColour = '#f4eceb';
+			navColour = '#3d2528';
 			break;
 		case 'yellow':
-			bgColour = '#666633';
-			navColour = '#404020';
+			bgColour = '#f4f1e8';
+			navColour = '#39331f';
 			break;
 		case 'pink':
-			bgColour = '#663366';
-			navColour = '#402040';
+			bgColour = '#f3ecf3';
+			navColour = '#382338';
 			break;
 		case 'green':
-			bgColour = '#336633';
-			navColour = '#204020';
+			bgColour = '#ecf2ec';
+			navColour = '#213621';
 			break;
 		case 'cyan':
-			bgColour = '#336666';
-			navColour = '#204040';
+			bgColour = '#eaf2f2';
+			navColour = '#1f3537';
 			break;
 		case 'blue':
-			bgColour = '#333366';
-			navColour = '#202040';
+			bgColour = '#ecefF6';
+			navColour = '#232c42';
 			break;
 		default:
-			bgColour = '#6c757d';
-			navColour = '#343a40';
+			bgColour = '#eef1f4';
+			navColour = '#222b36';
 	}
 	$('nav').animate({'background-color': navColour});
 	$('body').animate({'background-color': bgColour});
