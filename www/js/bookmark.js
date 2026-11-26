@@ -17,7 +17,7 @@ var GroupHide = {};
 var AltPressed = false;
 var ShiftPressed = false;
 var Mouseovered = false;
-var BMP_Version = '1.3.6';
+var BMP_Version = '1.3.7';
 var EditMode = false;
 
 // replaces {var} in Links/Favicon-URLs with the Group's Variable
@@ -1173,9 +1173,22 @@ function copyCellClick(e, el){
 	var cell = $(el);
 	var txt = cell.text().trim();
 	if(!txt)	return;
+	var x = e.pageX, y = e.pageY;
 	copyText(txt, function(ok){
-		flashCell(cell, ok);
+		showCopyToast(x, y, ok);
 	});
+}
+
+var CopyToastTimer = false;
+function showCopyToast(x, y, ok){
+	var toast = $('#copyToast');
+	if(!toast.length){
+		toast = $('<div id="copyToast"></div>').appendTo('body');
+	}
+	toast.text(ok ? 'copied' : 'copy failed').toggleClass('failed', !ok)
+		.css({left: (x + 12) + 'px', top: (y - 34) + 'px'}).addClass('show');
+	if(CopyToastTimer)	clearTimeout(CopyToastTimer);
+	CopyToastTimer = setTimeout(function(){ toast.removeClass('show'); }, 1100);
 }
 
 function tryCreateFromAddRow(row){

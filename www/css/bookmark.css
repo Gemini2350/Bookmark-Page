@@ -162,3 +162,22 @@ body {
 #bookmarks td.small {
     word-break: break-all;
 }
+#copyToast {
+    position: absolute;
+    background: #212b36;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 6px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity .15s ease;
+    z-index: 2000;
+}
+#copyToast.show {
+    opacity: .95;
+}
+#copyToast.failed {
+    background: #b02a37;
+}
