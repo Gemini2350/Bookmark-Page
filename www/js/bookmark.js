@@ -17,7 +17,7 @@ var GroupHide = {};
 var AltPressed = false;
 var ShiftPressed = false;
 var Mouseovered = false;
-var BMP_Version = '1.3.7';
+var BMP_Version = '1.3.8';
 var EditMode = false;
 
 // replaces {var} in Links/Favicon-URLs with the Group's Variable
@@ -267,9 +267,16 @@ function loadPage(callback){
 				Numbers.totalBMs = 0;
 				for (gName in Bookmarks){
 					var groupVar = GroupData[gName].variable;
-					html += '<tr class="GroupTitle" onclick="toggleGroup(\'g-'+gcid+'\');">';
-					if(EditMode)	html += '<td></td>';
-					html += '<td id="gI-g-'+gcid+'" class="GroupIcon"><i data-feather="chevron-up" width="20" height="20"></i></td><th data-g="name">'+gName+'</th><td data-g="remarks" colspan="'+colspanNr+'" scope="row">'+GroupData[gName].remarks;
+					// in edit mode only the chevron toggles, so clicking the
+					// name/remarks cells edits them without collapsing the group
+					if(EditMode){
+						html += '<tr class="GroupTitle"><td></td>';
+						html += '<td id="gI-g-'+gcid+'" class="GroupIcon" onclick="toggleGroup(\'g-'+gcid+'\');"><i data-feather="chevron-up" width="20" height="20"></i></td>';
+					}else{
+						html += '<tr class="GroupTitle" onclick="toggleGroup(\'g-'+gcid+'\');">';
+						html += '<td id="gI-g-'+gcid+'" class="GroupIcon"><i data-feather="chevron-up" width="20" height="20"></i></td>';
+					}
+					html += '<th data-g="name">'+gName+'</th><td data-g="remarks" colspan="'+colspanNr+'" scope="row">'+GroupData[gName].remarks;
 					if(!EditMode && groupVar)	html += '<span class="gvar-chip">'+groupVar+'</span>';
 					html += '</td></tr>';
 					$.each(Bookmarks[gName], function(i, bookmark){
@@ -381,7 +388,6 @@ function sort(row){
 }
 
 function toggleGroup(groupClass){
-	if(EditMode)	return;
 	var d = new Date();
 	d.setTime(d.getTime() + (365*24*60*60*1000));
 	var expires = "expires="+ d.toUTCString();
